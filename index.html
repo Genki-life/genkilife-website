@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genki — A quiet Growth OS for becoming</title>
+<style>
+  :root {
+    /* Plan A skin: white + near-black; purple is a rare accent only */
+    --ink: #0A0A0A;
+    --ink-2: #555555;
+    --ink-3: #888888;
+    --line: #ECECEC;
+    --bg: #FFFFFF;
+    --bg-soft: #F7F7F8;
+    --accent: #534AB7;       /* used ONLY on links + small icon strokes */
+    --honey: #E8B98C;        /* one warm touch on Bond, kept tiny */
+    --sans: 'Liberation Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--sans); background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 56px; }
+  a { color: inherit; text-decoration: none; }
+
+  /* NAV */
+  /* sticky header that morphs into a floating pill on scroll */
+  .site-header { position: sticky; top: 0; z-index: 50; transition: padding 0.4s cubic-bezier(.22,.61,.36,1); padding: 0; }
+  .site-header .wrap { transition: max-width 0.4s cubic-bezier(.22,.61,.36,1); }
+  .nav { display: flex; align-items: center; justify-content: space-between; padding: 30px 0;
+    border: 1px solid transparent; border-radius: 100px;
+    transition: padding 0.4s cubic-bezier(.22,.61,.36,1), background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, backdrop-filter 0.4s ease; }
+  /* scrolled state — the pill */
+  .site-header.scrolled { padding-top: 14px; }
+  .site-header.scrolled .wrap { max-width: 960px; }
+  .site-header.scrolled .nav {
+    padding: 12px 14px 12px 24px;
+    background: rgba(255,255,255,0.72);
+    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    backdrop-filter: saturate(180%) blur(14px);
+    border-color: var(--line);
+    box-shadow: 0 8px 30px rgba(20,18,40,0.08);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: 800; letter-spacing: -0.02em; transition: font-size 0.4s ease; }
+  .site-header.scrolled .brand { font-size: 20px; }
+  .site-header.scrolled .brand svg { width: 24px; height: 24px; }
+  .nav-links { display: flex; align-items: center; gap: 40px; font-size: 15px; color: var(--ink-2); }
+  .nav-links a:hover { color: var(--ink); }
+  .nav-cta { padding: 11px 22px; background: var(--ink); color: #fff !important; border-radius: 100px; font-size: 14px; font-weight: 600; }
+
+  /* HERO */
+  .hero { position: relative; display: grid; grid-template-columns: 1.06fr 0.94fr; align-items: center; gap: 56px; padding: 70px 0 110px; }
+  .hero .copy, .hero .nova-stage { position: relative; z-index: 2; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 28px; }
+  .eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink); }
+  h1 { font-weight: 800; font-size: 72px; line-height: 0.98; letter-spacing: -0.035em; margin-bottom: 28px; }
+  .hero .sub { font-size: 19px; line-height: 1.6; color: var(--ink-2); max-width: 470px; margin-bottom: 16px; }
+  .hero .micro { font-size: 14px; color: var(--ink-3); margin-bottom: 36px; }
+
+  .signup { display: flex; gap: 10px; max-width: 460px; }
+  .signup input { flex: 1; padding: 15px 20px; border: 1.5px solid var(--line); border-radius: 100px; font-family: var(--sans); font-size: 15px; color: var(--ink); outline: none; }
+  .signup input::placeholder { color: var(--ink-3); }
+  .btn-dark { padding: 15px 30px; background: var(--ink); color: #fff; border: none; border-radius: 100px; font-family: var(--sans); font-size: 15px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .signup-note { font-size: 13px; color: var(--ink-3); margin-top: 14px; }
+  .link-accent { color: var(--accent); }
+
+  /* phone — clinical light screen like Plan A */
+  .phone-stage { display: grid; place-items: center; }
+  .phone { position: relative; width: 268px; height: 548px; border-radius: 46px; padding: 13px; background: #1a1a1a; box-shadow: 0 26px 60px rgba(0,0,0,0.16); }
+  .phone .screen { width: 100%; height: 100%; border-radius: 34px; background: #F4F4F5; position: relative; overflow: hidden; }
+  .phone .notch { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); width: 96px; height: 24px; border-radius: 100px; background: #1a1a1a; z-index: 6; }
+  .phone .nova { position: absolute; top: 34px; right: 22px; z-index: 7; }
+  .phone .state-label { position: absolute; top: 70px; left: 0; right: 0; text-align: center; font-size: 22px; font-weight: 700; color: var(--ink); z-index: 5; letter-spacing: -0.01em; }
+  .phone .state-sub { position: absolute; top: 102px; left: 0; right: 0; text-align: center; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); z-index: 5; }
+  .phone .chips { position: absolute; bottom: 30px; left: 20px; right: 20px; display: flex; gap: 8px; justify-content: center; z-index: 5; }
+  .chip { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 8px 13px; font-size: 11px; font-weight: 500; color: var(--ink-2); }
+
+  /* STANCE */
+  .stance { text-align: center; padding: 10px 0 90px; }
+  .stance p { font-size: 44px; font-weight: 800; line-height: 1.12; letter-spacing: -0.03em; max-width: 1000px; margin: 0 auto; }
+  .stance .q { color: var(--ink-3); }
+
+  /* BOND + WAITLIST BAND (A+B combined) */
+  .bond-band { text-align: center; padding: 16px 0 96px; }
+  .silhouettes { display: flex; justify-content: center; align-items: flex-end; gap: 0; margin-bottom: 34px; }
+  .sil { width: 60px; height: 60px; border-radius: 50%; background: #ECECEE; border: 3px solid #fff; margin-left: -12px; display: grid; place-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    opacity: 0; transform: translateX(-60px);
+    transition: opacity 0.5s ease, transform 0.85s cubic-bezier(.16,.84,.3,1); }
+  /* damped ease-out: fast in, soft settle. staggered per child. */
+  .bond-in .sil { opacity: 1; transform: translateX(0); }
+  .bond-in .sil:nth-child(1) { transition-delay: 0s; }
+  .bond-in .sil:nth-child(2) { transition-delay: 0.09s; }
+  .bond-in .sil:nth-child(3) { transition-delay: 0.18s; }
+  .bond-in .sil:nth-child(4) { transition-delay: 0.27s; }
+  .bond-in .sil:nth-child(5) { transition-delay: 0.36s; }
+  .sil:first-child { margin-left: 0; }
+  .sil svg { width: 60px; height: 60px; }
+  .sil.more { background: #fff; border: 1.5px solid var(--line); font-size: 13px; font-weight: 700; color: var(--ink-2); }
+  .bond-line { font-size: 30px; font-weight: 800; letter-spacing: -0.025em; line-height: 1.15; margin-bottom: 14px; }
+  .bond-line .ac { color: var(--accent); }
+  .bond-sub { font-size: 16px; color: var(--ink-2); line-height: 1.6; max-width: 460px; margin: 0 auto 26px; }
+  .count-pill { display: inline-flex; align-items: center; gap: 9px; padding: 10px 20px; border: 1.5px solid var(--line); border-radius: 100px; font-size: 14px; color: var(--ink-2); }
+  .count-pill .num { font-weight: 800; color: var(--ink); }
+  .count-pill .live { width: 7px; height: 7px; border-radius: 50%; background: #2BB673; }
+
+  /* SECTION SHELL */
+  section.block { padding: 96px 0; border-top: 1px solid var(--line); }
+  .section-line { border: none; border-top: 1px solid var(--line); margin: 0; }
+  .sec-eyebrow { font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 18px; text-align: center; }
+  .sec-title { font-weight: 800; font-size: 48px; line-height: 1.05; letter-spacing: -0.03em; text-align: center; margin-bottom: 16px; }
+  .sec-intro { font-size: 18px; color: var(--ink-2); text-align: center; max-width: 600px; margin: 0 auto 60px; line-height: 1.6; }
+
+  /* LAYERS — two-column split (left narrative + right list card) */
+  .layers-split { display: grid; grid-template-columns: 0.85fr 1.15fr; gap: 72px; align-items: center; }
+  .lx-eyebrow { display: inline-flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 28px; }
+  .lx-eyebrow .ln { width: 28px; height: 1px; background: var(--ink-3); display: inline-block; }
+  .lx-title { font-weight: 800; font-size: 56px; line-height: 1.0; letter-spacing: -0.035em; margin-bottom: 26px; }
+  .lx-desc { font-size: 18px; line-height: 1.62; color: var(--ink-2); max-width: 460px; margin-bottom: 48px; }
+  .lx-princ { display: grid; grid-template-columns: repeat(3, auto); gap: 48px; justify-content: start; }
+  .lx-princ .p .pk { font-size: 21px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .lx-princ .p .pl { font-size: 13.5px; color: var(--ink-3); }
+
+  /* right list card */
+  .layer-card { border: 1px solid var(--line); border-radius: 18px; overflow: hidden; background: #fff; }
+  .lc-head { display: flex; align-items: center; justify-content: space-between; padding: 22px 28px; border-bottom: 1px solid var(--line); }
+  .lc-head .lc-name { font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+  .lc-head .lc-status { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+  .lc-head .lc-status .d { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  .lc-row { display: flex; align-items: center; gap: 18px; padding: 22px 28px; border-bottom: 1px solid var(--line); transition: background 0.2s ease; }
+  .lc-row:last-child { border-bottom: none; }
+  .lc-row:hover { background: var(--bg-soft); }
+  .lc-row .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted-light); flex: none; }
+  .lc-row.live .dot { background: var(--ink); }
+  .lc-row .lc-main { flex: 1; }
+  .lc-row .lc-l { font-size: 21px; font-weight: 700; letter-spacing: -0.015em; line-height: 1.15; }
+  .lc-row .lc-sub { font-size: 13.5px; color: var(--ink-3); margin-top: 2px; }
+  .lc-row .lc-state { font-size: 13px; color: var(--ink-3); white-space: nowrap; }
+  .lc-row.live .lc-state { color: var(--accent); font-weight: 600; }
+  .lc-row.warm .dot { background: var(--honey); }
+
+  /* VALUE PROPS */
+  .vps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+  .vp { padding: 4px 0; }
+  .vp .vmark { width: 36px; height: 36px; margin-bottom: 22px; }
+  .vp h3 { font-size: 23px; font-weight: 800; line-height: 1.22; letter-spacing: -0.02em; margin-bottom: 14px; }
+  .vp p { font-size: 15.5px; line-height: 1.6; color: var(--ink-2); }
+
+  /* MANIFESTO */
+  .manifesto { background: var(--bg-soft); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .manifesto .inner { max-width: 760px; margin: 0 auto; text-align: center; }
+  .manifesto .big { font-size: 34px; font-weight: 800; line-height: 1.3; letter-spacing: -0.025em; margin-bottom: 28px; }
+  .manifesto .small { font-size: 18px; color: var(--ink-2); line-height: 1.65; }
+  .manifesto .stay { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-top: 28px; }
+
+  /* FINAL */
+  .final { text-align: center; padding: 110px 0; }
+  .final h2 { font-weight: 800; font-size: 56px; letter-spacing: -0.035em; margin-bottom: 18px; line-height: 1; }
+  .final p { font-size: 17px; color: var(--ink-2); margin-bottom: 38px; }
+  .final .signup { margin: 0 auto; }
+
+  /* FOOTER */
+  footer { border-top: 1px solid var(--line); padding: 50px 0 60px; }
+  .foot-inner { display: flex; align-items: flex-start; justify-content: space-between; gap: 40px; }
+  .foot-brand { max-width: 290px; }
+  .foot-brand .brand { margin-bottom: 14px; }
+  .foot-brand p { font-size: 13.5px; color: var(--ink-3); line-height: 1.55; }
+  .foot-cols { display: flex; gap: 70px; }
+  .foot-col h4 { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 16px; font-weight: 700; }
+  .foot-col a { display: block; font-size: 14px; color: var(--ink-2); margin-bottom: 11px; }
+  .foot-col a:hover { color: var(--ink); }
+  .foot-legal { margin-top: 40px; font-size: 12.5px; color: var(--ink-3); }
+
+  /* ============ MOTION (tech skin: organic, not mechanical) ============ */
+  /* Nova rotating particle sphere — right-side hero visual */
+  .nova-stage { position: relative; display: grid; place-items: center; min-height: 540px; padding-bottom: 28px; }
+  #novaSphere { width: 100%; height: 540px; display: block; }
+  .nova-cap { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); text-align: center; }
+  .nova-cap .nm { display: block; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-3); }
+  .nova-cap .st { display: block; margin-top: 6px; font-size: 14px; color: var(--ink-2); letter-spacing: -0.005em; }
+  /* scroll reveal */
+  .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.9s cubic-bezier(.22,.61,.36,1), transform 0.9s cubic-bezier(.22,.61,.36,1); }
+  .reveal.in { opacity: 1; transform: none; }
+  .reveal.d1 { transition-delay: 0.08s; }
+  .reveal.d2 { transition-delay: 0.16s; }
+  .reveal.d3 { transition-delay: 0.24s; }
+  /* manifesto lines rise one by one */
+  .mline { opacity: 0; transform: translateY(14px); transition: opacity 1s ease, transform 1s ease; }
+  .mline.in { opacity: 1; transform: none; }
+  .mline.l2 { transition-delay: 0.5s; }
+  .mline.l3 { transition-delay: 1s; }
+  .mline.l4 { transition-delay: 1.5s; }
+  /* respect reduced motion — quiet means never forcing movement.
+     Sphere keeps a static frame (drawn once in JS); reveals show immediately. */
+  @media (prefers-reduced-motion: reduce) {
+    .reveal, .mline { opacity: 1 !important; transform: none !important; transition: none !important; }
+    .sil { opacity: 1 !important; transform: none !important; transition: none !important; }
+  }
+
+  /* ============ RESPONSIVE ============ */
+
+  /* Tablet ≤ 900px */
+  @media (max-width: 900px) {
+    .wrap { padding: 0 36px; }
+    .nav { padding: 24px 0; }
+    .nav-links { gap: 24px; }
+    .nav-links a:not(.nav-cta) { display: none; }   /* keep only the CTA on small screens */
+
+    .hero { grid-template-columns: 1fr; gap: 0; padding: 40px 0 72px; }
+    .hero .copy { order: 1; }
+    .nova-stage { order: 2; margin-top: 24px; min-height: 420px; }
+    #novaSphere { height: 420px; }
+    h1 { font-size: 60px; }
+
+    .layers-split { grid-template-columns: 1fr; gap: 40px; }
+    .lx-title { font-size: 44px; }
+
+    .vps { grid-template-columns: 1fr; gap: 40px; }
+    .sec-title { font-size: 40px; }
+    .stance p { font-size: 38px; }
+  }
+
+  /* Phone ≤ 600px */
+  @media (max-width: 600px) {
+    .wrap { padding: 0 22px; }
+
+    /* nav */
+    .brand { font-size: 21px; }
+    .nav-cta { padding: 9px 16px; font-size: 13px; }
+
+    /* hero */
+    .hero { padding: 28px 0 56px; }
+    .eyebrow { font-size: 11.5px; letter-spacing: 0.08em; margin-bottom: 20px; }
+    h1 { font-size: 44px; line-height: 1.0; letter-spacing: -0.03em; margin-bottom: 22px; }
+    .hero .sub { font-size: 17px; max-width: 100%; }
+    .hero .micro { margin-bottom: 28px; }
+
+    /* signup stacks vertically */
+    .signup { flex-direction: column; max-width: 100%; }
+    .signup input { width: 100%; }
+    .btn-dark { width: 100%; padding: 15px; }
+
+    /* nova sphere shrinks on phone */
+    .nova-stage { margin-top: 16px; min-height: 320px; }
+    #novaSphere { height: 320px; }
+
+    /* stance */
+    .stance { padding: 8px 0 64px; }
+    .stance p { font-size: 30px; line-height: 1.2; }
+
+    /* bond + waitlist band */
+    .bond-band { padding: 8px 0 64px; }
+    .sil { width: 50px; height: 50px; }
+    .sil svg { width: 50px; height: 50px; }
+    .bond-line { font-size: 25px; }
+    .bond-sub { font-size: 15px; }
+    .count-pill { font-size: 13px; padding: 9px 16px; }
+
+    /* sections */
+    section.block { padding: 64px 0; }
+    .sec-eyebrow { margin-bottom: 14px; }
+    .sec-title { font-size: 32px; line-height: 1.1; }
+    .sec-intro { font-size: 16px; margin-bottom: 40px; }
+
+    /* five layers split */
+    .layers-split { gap: 32px; }
+    .lx-title { font-size: 36px; }
+    .lx-desc { font-size: 16px; margin-bottom: 36px; }
+    .lx-princ { gap: 28px; }
+    .lx-princ .p .pk { font-size: 18px; }
+    .lc-row { padding: 18px 20px; gap: 14px; }
+    .lc-head { padding: 18px 20px; }
+    .lc-row .lc-l { font-size: 18px; }
+    .lc-row .lc-sub { font-size: 12.5px; }
+    .lc-head .lc-status { font-size: 11px; }
+
+    /* manifesto */
+    .manifesto .big { font-size: 27px; line-height: 1.3; }
+    .manifesto .small { font-size: 16px; }
+    .manifesto .stay { font-size: 21px; }
+
+    /* final */
+    .final { padding: 72px 0; }
+    .final h2 { font-size: 40px; }
+    .final p { font-size: 16px; }
+
+    /* footer stacks */
+    .foot-inner { flex-direction: column; gap: 36px; }
+    .foot-cols { gap: 48px; flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<!--
+  ============================================================
+  GENKI 官网首页 — 方案 A(纯白皮肤)+ A+B 区块
+  部署前 TODO(按出现顺序):
+  1. 字体:预览用 Liberation Sans 替身;部署改回 Inter Tight(Google Fonts)。
+  2. Hero 标题 "Becoming, gently." 为占位文案,三候选未定,确认后替换。
+  3. 手机框内为占位熊 + "In rhythm" 状态;Sam 提供真实 App 截图后替换整块 .screen。
+  4. 两个邮箱报名框:把 <input>+<button> 接 Formspree / ConvertKit endpoint(见 form action 注释)。
+  5. A+B 区块的 {{waitlist_count}}:接 waitlist 服务实时订阅数,切勿手写死数字(虚构社会证明 + 审核风险)。
+     建议:订阅数 < 200 时隐藏整个 .count-pill,仅留剪影 + 文案。
+  6. 人物剪影为灰色占位插画;上线前若无真实且授权的用户头像,保持插画,勿填陌生人真实照片。
+  7. Footer 的 Privacy Policy / Terms / Contact 为 # 占位,上架前必须是可访问的真实页面(HealthKit 强制要求隐私政策)。
+  设计规范说明:本页为贴合方案 A 视觉,主动偏离了 App 设计系统三条铁律
+  (纯白#FFF / 近黑#000 / 平背景 + 卡片用描边非 glass)。此为团队知情选择。
+  ============================================================
+-->
+
+<!-- NAV -->
+<header class="site-header" id="siteHeader"><div class="wrap"><div class="nav">
+  <div class="brand">
+    <svg width="28" height="28" viewBox="0 0 30 30" fill="none">
+      <path d="M22 9 C19 5.5 13.5 5 10 8.5 C6 12.5 6.5 19 11 21.5 C15 23.7 19.5 22 21.5 18.5" stroke="#534AB7" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+      <path d="M21.5 18.5 C22.5 16.5 22.5 15 21 14 L16 14" stroke="#534AB7" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+    </svg>
+    Genki
+  </div>
+  <div class="nav-links">
+    <a href="#">Philosophy</a>
+    <a href="#">The five layers</a>
+    <a href="#">Manifesto</a>
+    <a href="#" class="nav-cta">Join the waitlist</a>
+  </div>
+</div></div></header>
+
+<!-- HERO -->
+<div class="wrap"><section class="hero">
+  <div class="copy">
+    <div class="eyebrow"><span class="dot"></span> A quiet Growth OS for becoming</div>
+    <h1>Becoming,<br>gently.</h1>
+    <p class="sub">Genki is a gentle growth system that learns how you really are — and grows with you, at the speed of your own life.</p>
+    <p class="micro">Not another tracker. No streaks to break. No goals to chase.</p>
+    <!-- TODO: 接 Formspree/ConvertKit — 用 <form action="https://formspree.io/f/XXXX" method="POST"> 包住 input+button,input 加 name="email" -->
+    <div class="signup">
+      <input type="email" placeholder="you@email.com" />
+      <button class="btn-dark">Join the waitlist</button>
+    </div>
+    <p class="signup-note">Early access · iOS first · <a href="#" class="link-accent">What is Genki? →</a></p>
+  </div>
+  <!-- Nova — a quiet light that notices you (breathes on its own; subtly drifts/brightens toward cursor & scroll, damped) -->
+  <div class="nova-stage">
+    <canvas id="novaSphere" aria-hidden="true"></canvas>
+    <span class="nova-cap"><span class="nm">Nova</span><span class="st">It notices, so you don't have to.</span></span>
+  </div>
+</section></div>
+
+<!-- divider under Nova hero, matches section dividers -->
+<div class="wrap"><hr class="section-line" /></div>
+
+<!-- STANCE -->
+<div class="wrap"><div class="stance">
+  <p>A growth system, not another tracker. <span class="q">No streaks to break. No goals to chase. Just you, becoming.</span></p>
+</div></div>
+
+<!-- BOND + WAITLIST (A+B) -->
+<div class="wrap"><div class="bond-band reveal">
+  <div class="silhouettes">
+    <div class="sil"><svg viewBox="0 0 60 60" fill="#C7C7CF"><circle cx="30" cy="23" r="11"/><path d="M11 52 C11 40 19 35 30 35 C41 35 49 40 49 52 Z"/></svg></div>
+    <div class="sil"><svg viewBox="0 0 60 60" fill="#BFBFC9"><circle cx="30" cy="23" r="11"/><path d="M11 52 C11 40 19 35 30 35 C41 35 49 40 49 52 Z"/></svg></div>
+    <div class="sil"><svg viewBox="0 0 60 60" fill="#CFCFD7"><circle cx="30" cy="23" r="11"/><path d="M11 52 C11 40 19 35 30 35 C41 35 49 40 49 52 Z"/></svg></div>
+    <div class="sil"><svg viewBox="0 0 60 60" fill="#C2C2CC"><circle cx="30" cy="23" r="11"/><path d="M11 52 C11 40 19 35 30 35 C41 35 49 40 49 52 Z"/></svg></div>
+    <div class="sil more">+</div>
+  </div>
+  <div class="bond-line">Becoming, <span class="ac">not alone.</span></div>
+  <p class="bond-sub">Human beings are not meant to grow alone. Genki grows alongside the people — and the rhythms — that matter to you.</p>
+  <!-- 上线前:把 data-target 改成接 waitlist 服务的真实订阅数,文本 {{waitlist_count}} 由后端/脚本注入;18643 仅为演示动效用的假数字,切勿直接上线 -->
+  <div class="count-pill"><span class="live"></span> <span class="num" data-target="18643" data-placeholder="{{waitlist_count}}">0</span> people are becoming with Genki</div>
+</div></div>
+
+<!-- FIVE LAYERS — split layout -->
+<div class="wrap"><section class="block">
+  <div class="layers-split">
+    <div class="lx-left reveal">
+      <div class="lx-eyebrow"><span class="ln"></span> The five layers</div>
+      <h2 class="lx-title">You, across<br>five layers.</h2>
+      <p class="lx-desc">Body, mind, mood, bond, and craft constantly shape one another. When they move together, you feel in flow. Genki learns how they're moving — gently, over time.</p>
+      <div class="lx-princ">
+        <div class="p"><div class="pk">No streaks</div><div class="pl">nothing to break</div></div>
+        <div class="p"><div class="pk">No scores</div><div class="pl">nothing to chase</div></div>
+        <div class="p"><div class="pk">No rush</div><div class="pl">at your own speed</div></div>
+      </div>
+    </div>
+    <div class="lx-right reveal d1">
+      <div class="layer-card">
+        <div class="lc-head">
+          <span class="lc-name">Your layers</span>
+          <span class="lc-status"><span class="d"></span> Nova is listening</span>
+        </div>
+        <div class="lc-row live">
+          <span class="dot"></span>
+          <div class="lc-main"><div class="lc-l">Body</div><div class="lc-sub">身体 · Not performance — but vitality.</div></div>
+          <span class="lc-state">Live</span>
+        </div>
+        <div class="lc-row">
+          <span class="dot"></span>
+          <div class="lc-main"><div class="lc-l">Mind</div><div class="lc-sub">心智 · The ability to think, not just consume.</div></div>
+          <span class="lc-state">Coming soon</span>
+        </div>
+        <div class="lc-row">
+          <span class="dot"></span>
+          <div class="lc-main"><div class="lc-l">Mood</div><div class="lc-sub">情绪 · Not constant happiness — but emotional flow.</div></div>
+          <span class="lc-state">Coming soon</span>
+        </div>
+        <div class="lc-row warm">
+          <span class="dot"></span>
+          <div class="lc-main"><div class="lc-l">Bond</div><div class="lc-sub">联结 · Human beings are not meant to grow alone.</div></div>
+          <span class="lc-state">Coming soon</span>
+        </div>
+        <div class="lc-row">
+          <span class="dot"></span>
+          <div class="lc-main"><div class="lc-l">Craft</div><div class="lc-sub">创造 · The things that make you feel like yourself again.</div></div>
+          <span class="lc-state">Coming soon</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section></div>
+
+<!-- VALUE PROPS -->
+<div class="wrap"><section class="block">
+  <div class="sec-eyebrow">Why Genki is different</div>
+  <h2 class="sec-title">Quiet by design</h2>
+  <p class="sec-intro">No leaderboards. No guilt. A system that pays attention, so you can stop performing for your apps.</p>
+  <div class="vps">
+    <div class="vp reveal">
+      <svg class="vmark" viewBox="0 0 36 36" fill="none"><circle cx="18" cy="18" r="11" stroke="#534AB7" stroke-width="1.8"/><circle cx="18" cy="18" r="3.5" fill="#534AB7"/></svg>
+      <h3>It notices, so you don't have to</h3>
+      <p>Nova quietly reads your sleep, movement, and rhythm — and reflects what it sees. It observes; it never nags.</p>
+    </div>
+    <div class="vp reveal d1">
+      <svg class="vmark" viewBox="0 0 36 36" fill="none"><path d="M5 24 Q13 8 18 17 Q23 26 31 12" stroke="#534AB7" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+      <h3>Grows at the speed of your life</h3>
+      <p>Some weeks rise, some weeks rest. Genki softens when you need it to and moves when you're ready — no plan to fall behind on.</p>
+    </div>
+    <div class="vp reveal d2">
+      <svg class="vmark" viewBox="0 0 36 36" fill="none"><rect x="8" y="8" width="20" height="20" rx="6" stroke="#534AB7" stroke-width="1.8"/><path d="M14 18 L17 21 L23 14" stroke="#534AB7" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <h3>Your state matters more than your streak</h3>
+      <p>There is nothing to keep alive, nothing to break. Genki tracks how you are — not how much you produced.</p>
+    </div>
+  </div>
+</section></div>
+
+<!-- MANIFESTO -->
+<section class="block manifesto"><div class="wrap"><div class="inner">
+  <div class="sec-eyebrow">From the manifesto</div>
+  <p class="big mline">Human beings are not productivity machines. We are living systems.</p>
+  <p class="small mline l2">When body, mind, emotions, relationships, and creativity move together, we feel in flow. When they drift apart, we lose our rhythm. Genki is the feeling of being in rhythm with yourself — whether that rhythm is fast or slow, rising or resting.</p>
+  <p class="small mline l3" style="margin-top:22px;">Not maximizing output — but restoring rhythm. Not endless optimization — but sustainable aliveness.</p>
+  <div class="stay mline l4">Stay Genki.</div>
+</div></div></section>
+
+<!-- FINAL -->
+<div class="wrap"><section class="final">
+  <h2>Begin becoming.</h2>
+  <p>Join the waitlist for early access. iOS first, Android soon.</p>
+  <div class="signup">
+    <input type="email" placeholder="you@email.com" />
+    <button class="btn-dark">Join the waitlist</button>
+  </div>
+</section></div>
+
+<!-- FOOTER -->
+<footer><div class="wrap"><div class="foot-inner">
+  <div class="foot-brand">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 30 30" fill="none">
+        <path d="M22 9 C19 5.5 13.5 5 10 8.5 C6 12.5 6.5 19 11 21.5 C15 23.7 19.5 22 21.5 18.5" stroke="#534AB7" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+        <path d="M21.5 18.5 C22.5 16.5 22.5 15 21 14 L16 14" stroke="#534AB7" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+      </svg>
+      Genki
+    </div>
+    <p>A quiet Growth OS for becoming. General wellness, not medical advice.</p>
+  </div>
+  <div class="foot-cols">
+    <div class="foot-col"><h4>Product</h4><a href="#">The five layers</a><a href="#">Philosophy</a><a href="#">Join the waitlist</a></div>
+    <div class="foot-col"><h4>Legal</h4><a href="#">Privacy Policy</a><a href="#">Terms of Service</a></div>
+    <div class="foot-col"><h4>Contact</h4><a href="#">hello@genkilife.ai</a></div>
+  </div>
+</div>
+<div class="foot-legal">© 2026 Genki · genkilife.ai</div>
+</div></footer>
+
+<script>
+(function(){
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- Nova: a quiet light that notices you ----
+     Breathes autonomously. Cursor & scroll cause a small, heavily-damped drift +
+     brightness lift — "it noticed you moved", never chasing the pointer. ---- */
+  var cv = document.getElementById('novaSphere');
+  if (cv) {
+    var ctx = cv.getContext('2d'), W, H, dpr, t = 0, raf = 0;
+    var ptr = { tx:0, ty:0, cx:0, cy:0, act:0, actC:0 };
+    var scrollV = 0, lastY = window.scrollY;
+
+    function resize(){
+      dpr = Math.min(window.devicePixelRatio||1, 2);
+      W = cv.clientWidth; H = cv.clientHeight;
+      cv.width = W*dpr; cv.height = H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+    function lerp(a,b,n){ return a+(b-a)*n; }
+
+    window.addEventListener('pointermove', function(e){
+      var r = cv.getBoundingClientRect();
+      ptr.tx = ((e.clientX-r.left)/r.width  - 0.5)*2;
+      ptr.ty = ((e.clientY-r.top )/r.height - 0.5)*2;
+      ptr.act = 1;
+    });
+    window.addEventListener('pointerleave', function(){ ptr.act = 0; });
+    window.addEventListener('scroll', function(){
+      scrollV = Math.min(Math.abs(window.scrollY - lastY), 40); lastY = window.scrollY;
+    }, { passive:true });
+
+    function draw(){
+      ctx.clearRect(0,0,W,H);
+      var cx0=W*0.5, cy0=H*0.5;
+      ptr.cx = lerp(ptr.cx, ptr.tx, 0.04);     // slow damping = noticing, not chasing
+      ptr.cy = lerp(ptr.cy, ptr.ty, 0.04);
+      ptr.actC = lerp(ptr.actC, ptr.act, 0.03);
+      scrollV *= 0.92;
+
+      var breathe = 0.5+0.5*Math.sin(t*0.5);
+      var micro   = 0.5+0.5*Math.sin(t*1.3+1.0);
+      var ox = ptr.cx*26*ptr.actC, oy = ptr.cy*20*ptr.actC;
+      var cx = cx0+ox, cy = cy0+oy;
+      var base = Math.min(W,H)*0.30, R = base*(1+0.05*breathe);
+      var lift = 0.10*ptr.actC + Math.min(scrollV/40,1)*0.06;
+      var aCore = 0.16+0.06*breathe+lift, aMid = 0.10+0.04*micro+lift*0.6;
+
+      var g=ctx.createRadialGradient(cx,cy,0,cx,cy,R*1.7);
+      g.addColorStop(0,'rgba(127,119,221,'+aMid+')');
+      g.addColorStop(0.4,'rgba(168,162,236,'+(aMid*0.6)+')');
+      g.addColorStop(1,'rgba(168,162,236,0)');
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+
+      var g2=ctx.createRadialGradient(cx,cy,0,cx,cy,R);
+      g2.addColorStop(0,'rgba(99,88,201,'+aCore+')');
+      g2.addColorStop(0.5,'rgba(127,119,221,'+(aCore*0.55)+')');
+      g2.addColorStop(1,'rgba(127,119,221,0)');
+      ctx.fillStyle=g2; ctx.fillRect(0,0,W,H);
+
+      var rp=(t*0.18)%1, rr=R*0.5+rp*R*1.4, ra=(1-rp)*0.05*(0.6+0.4*breathe);
+      ctx.beginPath(); ctx.strokeStyle='rgba(127,119,221,'+ra+')'; ctx.lineWidth=1.5;
+      ctx.arc(cx,cy,rr,0,Math.PI*2); ctx.stroke();
+
+      for (var i=0;i<14;i++){
+        var a=i/14*Math.PI*2 + t*0.1;
+        var rad=R*(0.3+0.45*((i*37%100)/100));
+        var px=cx+Math.cos(a+Math.sin(t*0.3+i))*rad*0.6;
+        var py=cy+Math.sin(a+Math.cos(t*0.25+i))*rad*0.6;
+        ctx.beginPath();
+        ctx.fillStyle='rgba(99,88,201,'+(0.10+0.08*Math.sin(t+i))+')';
+        ctx.arc(px,py,1.6,0,Math.PI*2); ctx.fill();
+      }
+      t += 0.016;
+    }
+    function frame(){ draw(); raf=requestAnimationFrame(frame); }
+
+    resize();
+    window.addEventListener('resize', function(){ resize(); if(reduce) draw(); });
+
+    if (reduce) {
+      draw();   // static single frame — still a quiet light, no motion
+    } else {
+      frame();
+      var hero = cv.closest('.hero');
+      if ('IntersectionObserver' in window && hero){
+        new IntersectionObserver(function(es){
+          es.forEach(function(e){
+            if (e.isIntersecting){ if(!raf) frame(); }
+            else { cancelAnimationFrame(raf); raf=0; }
+          });
+        },{threshold:0}).observe(hero);
+      }
+    }
+  }
+
+  /* ---- Sticky header morphs into floating pill ---- */
+  var header = document.getElementById('siteHeader');
+  if (header) {
+    var onScroll = function(){
+      if (window.scrollY > 40) header.classList.add('scrolled');
+      else header.classList.remove('scrolled');
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
+
+  /* ---- Scroll reveal ---- */
+  var items = document.querySelectorAll('.reveal, .mline');
+  if (reduce || !('IntersectionObserver' in window)) {
+    items.forEach(function(el){ el.classList.add('in'); });
+  } else {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.18 });
+    items.forEach(function(el){ io.observe(el); });
+  }
+
+  /* ---- Bond band: silhouettes slide in (CSS) + waitlist count-up ---- */
+  var band = document.querySelector('.bond-band');
+  var numEl = band && band.querySelector('.num');
+  function fmt(n){ return n.toLocaleString('en-US'); }
+  function countUp(el){
+    var target = parseInt(el.getAttribute('data-target'), 10) || 0;
+    var dur = 1600, start = null;
+    function step(ts){
+      if (!start) start = ts;
+      var p = Math.min((ts - start) / dur, 1);
+      var eased = 1 - Math.pow(1 - p, 3);   // ease-out (damped)
+      el.textContent = fmt(Math.round(target * eased));
+      if (p < 1) requestAnimationFrame(step);
+      else el.textContent = fmt(target);
+    }
+    requestAnimationFrame(step);
+  }
+  if (band) {
+    if (reduce || !('IntersectionObserver' in window)) {
+      band.classList.add('bond-in');
+      if (numEl) numEl.textContent = fmt(parseInt(numEl.getAttribute('data-target'),10)||0);
+    } else {
+      var bio = new IntersectionObserver(function(entries){
+        entries.forEach(function(e){
+          if (e.isIntersecting){
+            band.classList.add('bond-in');   // triggers staggered silhouette slide
+            if (numEl) countUp(numEl);
+            bio.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.35 });
+      bio.observe(band);
+    }
+  }
+})();
+</script>
+</body>
+</html>
