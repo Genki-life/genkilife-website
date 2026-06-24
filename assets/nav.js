@@ -79,9 +79,9 @@
             '<a class="mm-tool" href="' + ROOT + 'rituals.html" style="font-weight:600;color:var(--accent);padding-left:8px;">Open Rituals &rarr;</a>' +
           '</div>' +
         '</div>' +
+        '<a class="mm-link" href="index.html#manifesto">Manifesto</a>' +
         '<a class="mm-link" href="index.html#five-layers">The five layers</a>' +
         '<a class="mm-link" href="index.html#philosophy">Philosophy</a>' +
-        '<a class="mm-link" href="index.html#manifesto">Manifesto</a>' +
         '<a class="mm-cta" href="index.html#waitlist">Join the waitlist</a>' +
       '</div></div>'
     );
@@ -93,12 +93,12 @@
       '<header class="site-header" id="siteHeader"><div class="wrap"><div class="nav">' +
         '<a class="brand" href="' + ROOT + 'index.html" style="text-decoration:none;color:inherit;">' + MARK + " Genki</a>" +
         '<div class="nav-links">' +
-          '<span class="has-mega">' +
-            '<button class="rituals-trigger" id="ritualsTrigger" aria-haspopup="true" aria-expanded="false">Rituals <span class="chev"></span></button>' +
-          '</span>' +
           '<a href="' + ROOT + 'index.html#philosophy">Philosophy</a>' +
           '<a href="' + ROOT + 'index.html#five-layers">The five layers</a>' +
           '<a href="' + ROOT + 'index.html#manifesto">Manifesto</a>' +
+          '<span class="has-mega">' +
+            '<button class="rituals-trigger" id="ritualsTrigger" aria-haspopup="true" aria-expanded="false">Rituals <span class="chev"></span></button>' +
+          '</span>' +
           '<a href="' + ROOT + 'index.html#waitlist" class="nav-cta">Join the waitlist</a>' +
         '</div>' +
         '<button class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>' +
