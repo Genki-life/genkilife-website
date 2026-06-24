@@ -73,15 +73,15 @@
     }).join("");
     return (
       '<div class="mobile-menu"><div class="mm-inner">' +
+        '<a class="mm-link" href="index.html#philosophy">Philosophy</a>' +
+        '<a class="mm-link" href="index.html#five-layers">The five layers</a>' +
+        '<a class="mm-link" href="index.html#manifesto">Manifesto</a>' +
         '<div class="mm-acc" id="mmRituals">' +
           '<div class="mm-acc-head">Rituals <span class="chev"></span></div>' +
           '<div class="mm-acc-body">' + dims +
             '<a class="mm-tool" href="' + ROOT + 'rituals.html" style="font-weight:600;color:var(--accent);padding-left:8px;">Open Rituals &rarr;</a>' +
           '</div>' +
         '</div>' +
-        '<a class="mm-link" href="index.html#manifesto">Manifesto</a>' +
-        '<a class="mm-link" href="index.html#five-layers">The five layers</a>' +
-        '<a class="mm-link" href="index.html#philosophy">Philosophy</a>' +
         '<a class="mm-cta" href="index.html#waitlist">Join the waitlist</a>' +
       '</div></div>'
     );
