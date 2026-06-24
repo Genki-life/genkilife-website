@@ -64,16 +64,17 @@
     overflow: hidden;
   }
 
-  /* 宽屏（Web）：套玻璃手机壳，固定手机比例，居中 */
+  /* 宽屏（Web）：套玻璃手机壳，固定基准尺寸，JS 等比缩放居中 */
   @media (min-width: 600px) {
+    .breathe-shell { position: relative; }
     .ritual-frame {
       flex: 0 0 auto;
-      width: auto;
-      /* 以高度为基准定出手机宽度：保持约 9:19.5 的竖屏比例，
-         高度填满可用空间（留一点呼吸边距），宽度随之换算。 */
-      height: min(820px, calc(100dvh - 90px - 48px));
-      aspect-ratio: 9 / 19.5;
-      max-width: calc(100vw - 48px);
+      /* 固定设计基准尺寸：框内永远按 390×820 布局（绝对装得下），
+         实际显示大小由 JS 通过 transform:scale 等比缩放得到。
+         矮屏 → 整体缩小，内容完整不溢出、不滚动。 */
+      width: 390px;
+      height: 820px;
+      transform-origin: center center;
       border-radius: 44px;
       /* 纯玻璃壳 */
       background: rgba(255, 255, 255, 0.45);
@@ -375,6 +376,35 @@
 
 <script src="../assets/nav.js"></script>
 <script src="../assets/main.js"></script>
+
+<!-- ════════════════════════════════════════════════════════════
+     手机壳等比缩放（仅宽屏）。容器层逻辑，与框内 ritual 无关。
+     基准 390×820；按可用空间算 scale（≤1），矮屏自动缩小，
+     内容完整不溢出、不滚动。任何塞进框的 ritual 都受益。
+     ════════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  var BASE_W = 390, BASE_H = 820, MARGIN = 32;
+  var frame = document.querySelector('.ritual-frame');
+  var shell = document.querySelector('.breathe-shell');
+  if (!frame || !shell) return;
+
+  function fit() {
+    // 窄屏（手机）不套壳，清掉 transform，交给 CSS 全屏铺满
+    if (window.innerWidth < 600) { frame.style.transform = ''; return; }
+    var availW = shell.clientWidth  - MARGIN;
+    var availH = shell.clientHeight - MARGIN;
+    var scale = Math.min(availW / BASE_W, availH / BASE_H, 1);
+    frame.style.transform = 'scale(' + scale + ')';
+  }
+
+  fit();
+  window.addEventListener('resize', fit);
+  // 字体/布局就绪后再算一次，避免首帧测量偏差
+  window.addEventListener('load', fit);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+})();
+</script>
 
 <!-- ════════════════════════════════════════════════════════════
      框内 Sage Breath 逻辑（原生化自 React 项目，逻辑一比一保留）
