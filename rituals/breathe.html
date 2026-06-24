@@ -271,6 +271,60 @@
   .sg-grow{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:clamp(12px,2.5vh,18px); min-height:0; }
   .sg-bottom{ flex-shrink:0; display:flex; flex-direction:column; gap:14px; padding-top:14px; }
+
+  /* —— Setup Sheet 浮层（底部滑入，覆盖在 ritual 内）—— */
+  .sg-sheet-overlay{
+    position:absolute; inset:0; z-index:20;
+    display:flex; flex-direction:column; justify-content:flex-end;
+    visibility:hidden; pointer-events:none;
+  }
+  .sg-sheet-overlay.open{ visibility:visible; pointer-events:auto; }
+  .sg-sheet-scrim{
+    position:absolute; inset:0; background:rgba(45,58,48,.18);
+    -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px);
+    opacity:0; transition:opacity .3s ease;
+  }
+  .sg-sheet-overlay.open .sg-sheet-scrim{ opacity:1; }
+  .sg-sheet{
+    position:relative; z-index:1;
+    background:#fff; border-top:1px solid rgba(203,219,203,.4);
+    border-radius:36px 36px 0 0;
+    padding:20px clamp(20px,5vw,28px) 26px;
+    box-shadow:0 -16px 40px -12px rgba(45,58,48,.22);
+    transform:translateY(100%); transition:transform .36s cubic-bezier(.32,.72,0,1);
+    max-height:92%; overflow-y:auto;
+  }
+  .sg-sheet-overlay.open .sg-sheet{ transform:translateY(0); }
+  .sg-sheet-notch{ width:44px; height:5px; border-radius:100px; background:var(--sg-sage-100);
+    margin:0 auto 16px; }
+  .sg-sheet-body{ display:flex; flex-direction:column; gap:15px; text-align:left; }
+  .sg-sheet-title{ font-family:var(--sg-display); font-weight:700; font-size:18px;
+    color:var(--sg-sage-900); letter-spacing:-.01em; margin:0; }
+  .sg-sheet-sub{ font-family:var(--sg-mono); font-size:11px; color:var(--sg-sage-500); margin:3px 0 0; }
+  .sg-sheet-desc{ font-size:12.5px; line-height:1.6; color:var(--sg-sage-600); margin:0; }
+  .sg-sheet-instr{ background:var(--sg-sage-50); border:1px solid var(--sg-sage-100);
+    border-radius:16px; padding:13px 15px; font-size:11.5px; line-height:1.6; color:var(--sg-sage-700); }
+  .sg-sheet-instr strong{ color:var(--sg-sage-800); }
+  .sg-sheet-dur{ display:flex; flex-direction:column; gap:8px; }
+  .sg-sheet-dur-label{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--sg-sage-700); margin:0; }
+  .sg-sheet-dur-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .sg-dur-opt{ padding:13px 4px; border-radius:14px; font-size:13px; font-weight:600;
+    font-family:var(--sg-sans); cursor:pointer; border:1px solid transparent;
+    background:rgba(232,243,232,.6); color:var(--sg-sage-700); transition:all .15s; }
+  .sg-dur-opt:hover{ background:var(--sg-sage-100); }
+  .sg-dur-opt.sel{ background:var(--sg-sage-400); color:#fff; box-shadow:0 4px 12px -2px rgba(137,184,144,.4); }
+  .sg-sheet-cta{ display:grid; grid-template-columns:1fr 3fr; gap:8px; padding-top:4px; }
+  .sg-sheet-cancel{ padding:14px 8px; border-radius:18px; font-size:13px; font-weight:600;
+    font-family:var(--sg-sans); cursor:pointer; color:var(--sg-sage-600);
+    background:#fff; border:1px solid var(--sg-sage-200); transition:all .15s; }
+  .sg-sheet-cancel:hover{ background:var(--sg-sage-50); }
+  .sg-sheet-start{ padding:14px; border-radius:18px; font-size:13px; font-weight:600;
+    font-family:var(--sg-sans); cursor:pointer; color:#fff; border:none;
+    background:var(--sg-sage-400); display:flex; align-items:center; justify-content:center; gap:7px;
+    transition:all .15s; }
+  .sg-sheet-start:hover{ background:var(--sg-sage-500); box-shadow:0 10px 30px -5px rgba(137,184,144,.3); }
+  .sg-sheet-start svg{ width:15px; height:15px; }
 </style>
 </head>
 <body data-page="tool" data-root="../">
@@ -366,6 +420,33 @@
           </div>
         </div>
       </section>
+
+      <!-- Setup Sheet 浮层：点卡片后弹出，选时长后才开始（搬自 Sage 新版） -->
+      <div class="sg-sheet-overlay" id="sgSheetOverlay">
+        <div class="sg-sheet-scrim" id="sgSheetScrim"></div>
+        <div class="sg-sheet" id="sgSheet">
+          <div class="sg-sheet-notch"></div>
+          <div class="sg-sheet-body">
+            <div>
+              <h3 class="sg-sheet-title" id="sgSheetTitle"></h3>
+              <p class="sg-sheet-sub" id="sgSheetSub"></p>
+            </div>
+            <p class="sg-sheet-desc" id="sgSheetDesc"></p>
+            <div class="sg-sheet-instr">💡 <strong>Instructions: </strong><span id="sgSheetInstr"></span></div>
+            <div class="sg-sheet-dur">
+              <h4 class="sg-sheet-dur-label">Duration</h4>
+              <div class="sg-sheet-dur-grid" id="sgSheetDurGrid"></div>
+            </div>
+            <div class="sg-sheet-cta">
+              <button class="sg-sheet-cancel" id="sgSheetCancel">Cancel</button>
+              <button class="sg-sheet-start" id="sgSheetStart">
+                <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+                Start Session
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
     </div><!-- /.sg-root -->
   </div><!-- /.ritual-frame -->
@@ -506,18 +587,24 @@
   /* ---------- 2. 数据：三套技法 / 心情 / 禅语（搬自 data.ts）---------- */
   var TECHNIQUES = [
     { id:'sigh', name:'Physiological Sigh', sub:'Anxiety Relief · Rapid Calm', icon:'heart',
-      duration:180,
+      duration:180, durationOptions:[60,180,300],
+      desc:'Two quick inhales followed by a long exhale — a fast way to feel calmer within a few breaths.',
+      instruction:'Inhale deeply through your nose, take a quick second sniff to fully inflate your lungs, then sigh out slowly.',
       steps:[ {type:'inhale',duration:3.5,text:'Deep Inhale'},
               {type:'hold',duration:1.5,text:'Quick Double-Inhale'},
               {type:'exhale',duration:6,text:'Slow Sigh Exhale'} ] },
     { id:'box', name:'Box Breathing', sub:'Boost Focus · Enter Flow State', icon:'brain',
-      duration:180,
+      duration:180, durationOptions:[120,180,300],
+      desc:'Commonly used by Navy SEALs, this four-equal-step technique balances the nervous system, boosting focus and decision making.',
+      instruction:'Inhale for 4 seconds, hold for 4 seconds, exhale for 4 seconds, and hold empty for 4 seconds.',
       steps:[ {type:'inhale',duration:4,text:'Inhale'},
               {type:'hold',duration:4,text:'Hold Breath'},
               {type:'exhale',duration:4,text:'Exhale'},
               {type:'hold',duration:4,text:'Hold Breath'} ] },
     { id:'478', name:'4-7-8', sub:'Sleep & Relaxation · Deep Relaxation', icon:'moon',
-      duration:180,
+      duration:180, durationOptions:[180,300,480],
+      desc:'A widely practiced relaxation pattern. The long, slow exhale helps your body settle into a calmer, more restful state.',
+      instruction:'Inhale through nose for 4 seconds, hold breath for 7 seconds, then exhale with a whoosh sound from mouth for 8 seconds.',
       steps:[ {type:'inhale',duration:4,text:'Inhale'},
               {type:'hold',duration:7,text:'Hold Breath'},
               {type:'exhale',duration:8,text:'Exhale fully'} ] },
@@ -561,7 +648,7 @@
       card.innerHTML='<div class="sg-card-l"><div class="sg-card-ic">'+ICONS[t.icon]+'</div>'+
         '<div><div class="sg-card-name">'+t.name+'</div><div class="sg-card-meta">'+t.sub+'</div></div></div>'+
         '<span class="sg-card-chev">'+CHEVRON+'</span>';
-      card.addEventListener('click', function(){ firstInteract(); startSession(t); });
+      card.addEventListener('click', function(){ firstInteract(); openSheet(t); });
       box.appendChild(card);
     });
   })();
@@ -583,9 +670,46 @@
   var hasInteracted=false;
   function firstInteract(){ if(!hasInteracted){ audio.init(); hasInteracted=true; } }
 
+  /* ---------- 4.5 Setup Sheet 浮层逻辑 ---------- */
+  var sheetTech=null, sheetDuration=180;
+  var overlay=$('sgSheetOverlay'), durGrid=$('sgSheetDurGrid');
+  function openSheet(tech){
+    sheetTech=tech;
+    sheetDuration=tech.durationOptions[1]; // 默认中间档
+    $('sgSheetTitle').textContent=tech.name;
+    $('sgSheetSub').textContent=tech.sub;
+    $('sgSheetDesc').textContent=tech.desc;
+    $('sgSheetInstr').textContent=tech.instruction;
+    // 渲染时长选项
+    durGrid.innerHTML='';
+    tech.durationOptions.forEach(function(opt){
+      var b=document.createElement('button');
+      b.className='sg-dur-opt'+(opt===sheetDuration?' sel':'');
+      b.textContent=(opt/60)+' Min';
+      b.addEventListener('click', function(){
+        firstInteract(); audio.playTick(0.4);
+        sheetDuration=opt;
+        durGrid.querySelectorAll('.sg-dur-opt').forEach(function(x){ x.classList.remove('sel'); });
+        b.classList.add('sel');
+      });
+      durGrid.appendChild(b);
+    });
+    overlay.classList.add('open');
+  }
+  function closeSheet(){ overlay.classList.remove('open'); }
+  $('sgSheetScrim').addEventListener('click', closeSheet);
+  $('sgSheetCancel').addEventListener('click', function(){ firstInteract(); audio.playTick(0.2); closeSheet(); });
+  $('sgSheetStart').addEventListener('click', function(){
+    firstInteract();
+    closeSheet();
+    startSession(sheetTech, sheetDuration);
+  });
+
   /* ---------- 5. 呼吸会话引擎（搬自 BreathingFlow.tsx 的 100ms tick）---------- */
-  function startSession(tech){
-    cur=tech; timeLeft=tech.duration; stepIdx=0; paused=false; moodLocked=false;
+  var sessionTotal=180;  // 本次会话选定的总时长（秒）
+  function startSession(tech, duration){
+    cur=tech; sessionTotal=duration||tech.duration||180;
+    timeLeft=sessionTotal; stepIdx=0; paused=false; moodLocked=false;
     var first=tech.steps[0]; stepTimeLeft=first.duration;
     setScale(first.type==='inhale'?0.4:first.type==='exhale'?1.0:0.7);
     show('session');
@@ -642,7 +766,7 @@
   function completeSession(){
     if(tickTimer) clearInterval(tickTimer);
     audio.playBowlChime(293.66);
-    var mins=Math.ceil(cur.duration/60);
+    var mins=Math.round(sessionTotal/60);
     $('sgDoneSub').innerHTML='You have completed <b>'+mins+' minutes</b> of<br><u>'+cur.name+'</u> session.';
     var q=QUOTES[Math.floor(Math.random()*QUOTES.length)];
     $('sgQuote').innerHTML='💚 '+q.text+' — '+q.author;
