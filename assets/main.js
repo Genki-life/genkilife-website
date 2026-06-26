@@ -21,33 +21,19 @@
     items.forEach(function (el) { io.observe(el); });
   }
 
-  /* ---- Bond band: silhouettes slide in (CSS) + waitlist count-up ---- */
+  /* ---- Bond band: silhouettes slide in (CSS) ----
+     NOTE: the waitlist count-up lives in waitlist.js now, because the number
+     comes from the live backend, not a hard-coded target. We only trigger the
+     silhouette slide-in animation here. ---- */
   var band = document.querySelector(".bond-band");
-  var numEl = band && band.querySelector(".num");
-  function fmt(n) { return n.toLocaleString("en-US"); }
-  function countUp(el) {
-    var target = parseInt(el.getAttribute("data-target"), 10) || 0;
-    var dur = 1600, start = null;
-    function step(ts) {
-      if (!start) start = ts;
-      var p = Math.min((ts - start) / dur, 1);
-      var eased = 1 - Math.pow(1 - p, 3); // ease-out (damped)
-      el.textContent = fmt(Math.round(target * eased));
-      if (p < 1) requestAnimationFrame(step);
-      else el.textContent = fmt(target);
-    }
-    requestAnimationFrame(step);
-  }
   if (band) {
     if (reduce || !("IntersectionObserver" in window)) {
       band.classList.add("bond-in");
-      if (numEl) numEl.textContent = fmt(parseInt(numEl.getAttribute("data-target"), 10) || 0);
     } else {
       var bio = new IntersectionObserver(function (entries) {
         entries.forEach(function (e) {
           if (e.isIntersecting) {
             band.classList.add("bond-in");
-            if (numEl) countUp(numEl);
             bio.unobserve(e.target);
           }
         });
