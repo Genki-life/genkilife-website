@@ -11,13 +11,14 @@
     --sans: 'Liberation Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: var(--sans); background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  body { font-family: var(--sans); background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; overflow-x: clip; }
   .wrap { max-width: 1200px; margin: 0 auto; padding: 0 56px; }
   a { color: inherit; text-decoration: none; }
 
   /* NAV */
   /* sticky header that morphs into a floating pill on scroll */
-  .site-header { position: sticky; top: 0; z-index: 50; transition: padding 0.4s cubic-bezier(.22,.61,.36,1); padding: 0; }
+  #site-nav-root { position: sticky; top: 0; z-index: 50; }
+  .site-header { transition: padding 0.4s cubic-bezier(.22,.61,.36,1); padding: 0; }
   .site-header .wrap { transition: max-width 0.4s cubic-bezier(.22,.61,.36,1); }
   .nav { display: flex; align-items: center; justify-content: space-between; padding: 30px 0;
     border: 1px solid transparent; border-radius: 100px;
@@ -361,6 +362,11 @@
      RESPONSIVE for added pieces
      ====================================================== */
   @media (max-width: 900px) {
+    /*防止任何元素把页面撑宽导致左右滑动 */
+    html, body { overflow-x: clip; max-width: 100%; }
+    /* 移动端用 .mobile-menu，桌面那个全宽 mega 浮层不渲染（否则会撑宽页面） */
+    .mega { display: none !important; }
+
     /* show hamburger, hide desktop links, enable mobile menu */
     .nav-toggle { display: block; }
     .nav-links { display: none; }
@@ -416,12 +422,3 @@
     .tool-shell h1 { font-size: 34px; }
     .tool-shell { padding: 48px 22px; }
   }
-
-  /* ======================================================
-     WAITLIST form feedback message
-     ====================================================== */
-  .signup { position: relative; }
-  .form-msg { margin: 10px 2px 0; font-size: 13.5px; line-height: 1.4; min-height: 1em; }
-  .form-msg[data-kind="success"] { color: var(--accent); }
-  .form-msg[data-kind="error"] { color: #C0392B; }
-  .signup button:disabled { opacity: 0.7; cursor: default; }
