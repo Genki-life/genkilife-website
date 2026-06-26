@@ -40,7 +40,7 @@
     <p class="sub">Genki is a gentle growth system that learns how you really are — and grows with you, at the speed of your own life.</p>
     <p class="micro">Not another tracker. No streaks to break. No goals to chase.</p>
     <!-- waitlist signup → POSTs to Go backend on Railway (see assets/waitlist.js) -->
-    <form class="signup" id="waitlist" data-waitlist>
+    <form class="signup" id="waitlist" data-waitlist novalidate>
       <input type="email" name="email" placeholder="you@email.com" autocomplete="email" required />
       <button class="btn-dark" type="submit">Join the waitlist</button>
     </form>
@@ -142,7 +142,7 @@
 <div class="wrap"><section class="final">
   <h2>Begin becoming.</h2>
   <p>Join the waitlist for early access. iOS first, Android soon.</p>
-  <form class="signup" data-waitlist>
+  <form class="signup" data-waitlist novalidate>
     <input type="email" name="email" placeholder="you@email.com" autocomplete="email" required />
     <button class="btn-dark" type="submit">Join the waitlist</button>
   </form>
