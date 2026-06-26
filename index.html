@@ -15,6 +15,7 @@
 <meta property="og:description" content="Not another tracker. No streaks to break. No goals to chase. Just you, becoming.">
 <meta property="og:image" content="https://genkilife.ai/assets/og-default.png">
 <meta property="og:url" content="https://genkilife.ai/">
+<link rel="canonical" href="https://genkilife.ai/">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Genki — A quiet Growth OS for becoming">
 <meta name="twitter:description" content="Not another tracker. No streaks to break. No goals to chase. Just you, becoming.">
@@ -38,11 +39,11 @@
     <h1>Becoming,<br>gently.</h1>
     <p class="sub">Genki is a gentle growth system that learns how you really are — and grows with you, at the speed of your own life.</p>
     <p class="micro">Not another tracker. No streaks to break. No goals to chase.</p>
-    <!-- TODO: 接 Formspree/ConvertKit — 用 <form action="https://formspree.io/f/XXXX" method="POST"> 包住 input+button，input 加 name="email" -->
-    <div class="signup" id="waitlist">
-      <input type="email" placeholder="you@email.com" />
-      <button class="btn-dark">Join the waitlist</button>
-    </div>
+    <!-- waitlist signup → POSTs to Go backend on Railway (see assets/waitlist.js) -->
+    <form class="signup" id="waitlist" data-waitlist>
+      <input type="email" name="email" placeholder="you@email.com" autocomplete="email" required />
+      <button class="btn-dark" type="submit">Join the waitlist</button>
+    </form>
     <p class="signup-note">Early access · iOS first · <a href="rituals.html" class="link-accent">What is Genki? →</a></p>
   </div>
   <!-- Nova — a quiet light that notices you -->
@@ -70,8 +71,9 @@
   </div>
   <div class="bond-line">Becoming, <span class="ac">not alone.</span></div>
   <p class="bond-sub">Human beings are not meant to grow alone. Genki grows alongside the people — and the rhythms — that matter to you.</p>
-  <!-- 上线前：把 data-target 改成接 waitlist 服务的真实订阅数；文本 {{waitlist_count}} 由后端/脚本注入；18643 仅为演示动效用的假数字，切勿直接上线 -->
-  <div class="count-pill"><span class="live"></span> <span class="num" data-target="18643" data-placeholder="{{waitlist_count}}">0</span> people are becoming with Genki</div>
+  <!-- count is fetched live from the waitlist backend by assets/waitlist.js;
+       starts blank and counts up to the REAL number when scrolled into view -->
+  <div class="count-pill"><span class="live"></span> <span class="num">—</span> people are becoming with Genki</div>
 </div></div>
 
 <!-- FIVE LAYERS -->
@@ -140,10 +142,10 @@
 <div class="wrap"><section class="final">
   <h2>Begin becoming.</h2>
   <p>Join the waitlist for early access. iOS first, Android soon.</p>
-  <div class="signup">
-    <input type="email" placeholder="you@email.com" />
-    <button class="btn-dark">Join the waitlist</button>
-  </div>
+  <form class="signup" data-waitlist>
+    <input type="email" name="email" placeholder="you@email.com" autocomplete="email" required />
+    <button class="btn-dark" type="submit">Join the waitlist</button>
+  </form>
 </section></div>
 
 <!-- shared footer injected by nav.js -->
@@ -153,5 +155,6 @@
 <script src="assets/nav.js"></script>
 <script src="assets/nova.js"></script>
 <script src="assets/main.js"></script>
+<script src="assets/waitlist.js"></script>
 </body>
 </html>
