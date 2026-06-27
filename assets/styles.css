@@ -24,7 +24,7 @@
     border: 1px solid transparent; border-radius: 100px;
     transition: padding 0.4s cubic-bezier(.22,.61,.36,1), background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, backdrop-filter 0.4s ease; }
   /* scrolled state — the pill */
-  .site-header.scrolled { padding-top: 14px; }
+  .site-header.scrolled { transform: translateY(10px); }  /* translateY not padding: avoids reflow that causes shake */
   .site-header.scrolled .wrap { max-width: 960px; }
   .site-header.scrolled .nav {
     padding: 12px 14px 12px 24px;
