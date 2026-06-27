@@ -158,7 +158,7 @@
      during .scrolled nudging content up → scrollY drops below threshold →
      class removed → content drops back → scrollY rises → loop. ---- */
   function onScroll() {
-    if (window.scrollY > 100) header.classList.add("scrolled");
+    if (window.scrollY > 40) header.classList.add("scrolled");
     else header.classList.remove("scrolled");
   }
   onScroll();
