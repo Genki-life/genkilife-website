@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Breathe — Genki</title>
-<meta name="description" content="A slow breathing space from Genki — follow the light, in box breathing, 4-7-8, or your own rhythm. General wellness, not medical advice.">
+<meta name="description" content="A slow breathing space from Genki — follow your rhythm. General wellness, not medical advice.">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="canonical" href="https://genkilife.ai/rituals/breathe.html">
 <link rel="stylesheet" href="../assets/styles.css">
 
 <!-- Open Graph / social preview -->
@@ -15,7 +16,6 @@
 <meta property="og:description" content="A small ritual from Genki — a quiet Growth OS for becoming. Follow the light, find your rhythm.">
 <meta property="og:image" content="https://genkilife.ai/assets/og-breathe.png">
 <meta property="og:url" content="https://genkilife.ai/rituals/breathe.html">
-<link rel="canonical" href="https://genkilife.ai/rituals/breathe.html">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Breathe — a quiet space to slow down">
 <meta name="twitter:description" content="A small ritual from Genki — a quiet Growth OS for becoming.">
@@ -26,29 +26,788 @@
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 </script>
 <script defer src="/_vercel/insights/script.js"></script>
+
+<style>
+  /* ============================================================
+     红框外 (host shell) —— 保持 Genki 站点的工具页布局不变。
+     这一层用站点共享的 styles.css 设计 token (--ink/--line 等)。
+     ============================================================ */
+  .breathe-shell {
+    height: calc(100vh - 90px);
+    height: calc(100dvh - 90px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  /* ============================================================
+     红框 = ritual 容器。装下「用户用大模型生成的 ritual」。
+     MVP 阶段：直接内联渲染，不用 iframe（先不隔离）。
+
+     自适应策略（容器宽度驱动，非设备类型）：
+     - 窄屏 / 窄窗口（手机）：ritual 全屏铺满，自适应屏幕。
+     - 宽屏（Web）：ritual 收缩成手机竖屏比例，外面套一个
+       纯玻璃手机壳，居中显示。
+     手机壳是「容器」的能力，不是某个 ritual 的责任 —— 将来任何
+     塞进框的 ritual 都自动获得这套展示逻辑。
+     ============================================================ */
+
+  /* 默认（窄屏 / 手机）：铺满整个 shell */
+  .ritual-frame {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* 宽屏（Web）：套玻璃手机壳，固定基准尺寸，JS 等比缩放居中 */
+  @media (min-width: 600px) {
+    .breathe-shell { position: relative; }
+    .ritual-frame {
+      flex: 0 0 auto;
+      /* 固定设计基准尺寸：框内永远按 390×820 布局（绝对装得下），
+         实际显示大小由 JS 通过 transform:scale 等比缩放得到。
+         矮屏 → 整体缩小，内容完整不溢出、不滚动。 */
+      width: 390px;
+      height: 820px;
+      transform-origin: center center;
+      border-radius: 44px;
+      /* 纯玻璃壳 */
+      background: rgba(255, 255, 255, 0.45);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow:
+        0 1px 1px rgba(255,255,255,0.6) inset,
+        0 30px 60px -20px rgba(93, 128, 100, 0.28),
+        0 12px 28px -12px rgba(93, 128, 100, 0.18);
+      padding: 10px;            /* 壳厚度：内屏与壳边之间留一圈 */
+    }
+    /* 壳内的「屏幕」：再做一层圆角裁切，让 ritual 嵌在玻璃壳里 */
+    .ritual-frame > .sg-root {
+      border-radius: 36px;
+      overflow: hidden;
+    }
+  }
+
+  /* ============================================================
+     ↓↓↓ 以下全部是「框内」内容：原生化的 Sage Breath ↓↓↓
+     来自用户提供的 React 项目，已脱离 React/Vite/Tailwind，
+     UI 与交互逻辑一比一保留。所有样式带 .sg- 前缀，
+     与站点 styles.css 完全隔离，不会互相污染。
+     ============================================================ */
+
+  /* —— 字体：Sage 原项目用 Inter/Space Grotesk/JetBrains Mono。
+        站点可能没全加载，这里给安全回退，不引入外部 CDN。 —— */
+  .sg-root {
+    --sg-sage-50:#FDFBF7; --sg-sage-100:#E8F3E8; --sg-sage-200:#CBDBCB;
+    --sg-sage-300:#B7D5BD; --sg-sage-400:#A3C9A8; --sg-sage-500:#89B890;
+    --sg-sage-600:#5D8064; --sg-sage-700:#4A6951; --sg-sage-800:#354D3B; --sg-sage-900:#2D3A30;
+    --sg-sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    --sg-display:"Space Grotesk","Inter",sans-serif;
+    --sg-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,monospace;
+
+    position:absolute; inset:0;
+    font-family:var(--sg-sans);
+    color:var(--sg-sage-900);
+    background:linear-gradient(45deg,#E2EBE4 0%,#F4F7F5 50%,#E2EBE4 100%);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+    user-select:none; -webkit-user-select:none;
+  }
+  .sg-root *{ box-sizing:border-box; }
+
+  /* —— 每一屏：绝对铺满容器，淡入淡出切换（还原 React 版屏间过渡）—— */
+  .sg-screen{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    padding:clamp(16px,3.5vh,32px) clamp(16px,4vw,28px);
+    opacity:0; pointer-events:none;
+    transition:opacity .45s ease;
+    overflow-y:auto;
+  }
+  .sg-screen.active{ opacity:1; pointer-events:auto; }
+
+  /* —— 内容列：框内永远是手机宽度，统一用手机版布局 —— */
+  .sg-col{
+    width:100%; max-width:440px; margin:0 auto;
+    flex:1; display:flex; flex-direction:column;
+    min-height:0;
+  }
+
+  /* —— 顶部小工具栏（静音等）—— */
+  .sg-top{ display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
+  .sg-icon-btn{
+    width:30px; height:30px; border-radius:50%;
+    background:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.55);
+    display:grid; place-items:center; cursor:pointer; color:var(--sg-sage-700);
+    box-shadow:0 1px 3px rgba(0,0,0,.04); transition:background .15s, transform .1s;
+    flex-shrink:0;
+  }
+  .sg-icon-btn:hover{ background:#fff; }
+  .sg-icon-btn:active{ transform:scale(.95); }
+  .sg-icon-btn svg{ width:15px; height:15px; }
+
+  /* —— 吉祥物（CSS 黏土兔，还原原项目绿兔气质）—— */
+  .sg-mascot-ring{
+    width:clamp(140px,22vh,178px); aspect-ratio:1;
+    border-radius:50%; background:rgba(232,243,232,.25);
+    display:grid; place-items:center; margin:0 auto;
+    animation:sg-float 6s ease-in-out infinite;
+  }
+  @keyframes sg-float{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
+  .sg-bunny{ width:68%; height:68%; position:relative; }
+  .sg-bunny .b-body{ position:absolute; left:22%; top:28%; width:56%; height:62%;
+    border-radius:46% 46% 48% 48%;
+    background:radial-gradient(circle at 38% 30%,#c4e3c9,var(--sg-sage-400));
+    box-shadow:0 10px 22px rgba(93,128,100,.3), inset 0 -7px 12px rgba(93,128,100,.22); }
+  .sg-bunny .b-ear{ position:absolute; top:-2%; width:15%; height:42%; border-radius:50%;
+    background:var(--sg-sage-400); box-shadow:inset 0 -3px 7px rgba(93,128,100,.22); }
+  .sg-bunny .b-ear.l{ left:34%; transform:rotate(-12deg); }
+  .sg-bunny .b-ear.r{ left:52%; transform:rotate(10deg); }
+  .sg-bunny .b-ear::after{ content:""; position:absolute; inset:18% 24%; border-radius:50%; background:#eef6ef; }
+  .sg-bunny .b-eye{ position:absolute; top:50%; width:8%; height:8%; border-radius:50%; background:#1d2a20; }
+  .sg-bunny .b-eye.l{ left:36%; } .sg-bunny .b-eye.r{ left:57%; }
+  .sg-bunny .b-cheek{ position:absolute; top:60%; width:7%; height:4%; border-radius:50%; background:#f3a9a0; opacity:.7; }
+  .sg-bunny .b-cheek.l{ left:30%; } .sg-bunny .b-cheek.r{ left:62%; }
+  .sg-bunny .b-paw{ position:absolute; top:36%; right:8%; width:12%; aspect-ratio:1; border-radius:50%;
+    background:var(--sg-sage-400); }
+
+  /* —— 标题 —— */
+  .sg-h1{ font-family:var(--sg-display); font-weight:700; font-size:clamp(20px,3.2vh,26px);
+    color:var(--sg-sage-900); text-align:center; line-height:1.3; letter-spacing:-.01em; }
+  .sg-sub{ font-size:12.5px; color:rgba(93,128,100,.9); text-align:center; font-weight:500; margin-top:8px; }
+
+  /* —— 首页选择卡片 —— */
+  .sg-cards{ display:flex; flex-direction:column; gap:12px; flex-shrink:0; }
+  .sg-card{ display:flex; align-items:center; justify-content:space-between; gap:12px;
+    background:rgba(255,255,255,.82); border:1px solid rgba(255,255,255,.6); border-radius:24px;
+    padding:clamp(14px,2vh,18px); cursor:pointer; text-align:left;
+    box-shadow:0 10px 30px -5px rgba(137,184,144,.15), 0 5px 15px -3px rgba(137,184,144,.08);
+    transition:background .15s, transform .1s; }
+  .sg-card:hover{ background:#fff; }
+  .sg-card:active{ transform:scale(.98); }
+  .sg-card-l{ display:flex; align-items:center; gap:14px; min-width:0; }
+  .sg-card-ic{ width:48px; height:48px; border-radius:16px; background:rgba(232,243,232,.9);
+    border:1px solid var(--sg-sage-100); display:grid; place-items:center; color:var(--sg-sage-500);
+    box-shadow:0 1px 3px rgba(0,0,0,.04); flex-shrink:0; }
+  .sg-card-ic svg{ width:24px; height:24px; }
+  .sg-card-name{ font-family:var(--sg-display); font-weight:600; font-size:14px; color:var(--sg-sage-900); }
+  .sg-card-meta{ font-size:10.5px; color:var(--sg-sage-600); margin-top:2px; }
+  .sg-card-chev{ color:var(--sg-sage-400); flex-shrink:0; }
+  .sg-card-chev svg{ width:20px; height:20px; }
+
+  /* —— 底部声波装饰 —— */
+  .sg-wave{ display:flex; align-items:flex-end; justify-content:center; gap:3px;
+    height:28px; margin-top:auto; padding-top:14px; opacity:.45; flex-shrink:0; }
+  .sg-wave i{ width:3px; background:var(--sg-sage-400); border-radius:3px; display:block;
+    animation:sg-wave 1.4s ease-in-out infinite; }
+  @keyframes sg-wave{ 0%,100%{transform:scaleY(.5);} 50%{transform:scaleY(1);} }
+
+  /* —— 呼吸屏 orb —— */
+  .sg-timer-pill{ display:inline-flex; align-items:center; gap:6px;
+    background:rgba(255,255,255,.7); border:1px solid rgba(255,255,255,.6); border-radius:100px;
+    padding:7px 16px; font-family:var(--sg-mono); font-size:12px; font-weight:500; color:var(--sg-sage-800); }
+  .sg-timer-pill .pulse{ width:8px; height:8px; border-radius:50%; background:var(--sg-sage-500);
+    animation:sg-pulse 2s ease-in-out infinite; }
+  @keyframes sg-pulse{ 0%,100%{opacity:1;} 50%{opacity:.4;} }
+  .sg-orb-area{ flex:1; display:flex; align-items:center; justify-content:center; position:relative; min-height:0; }
+  .sg-orb-glow{ position:absolute; border-radius:50%; background:rgba(163,201,168,.12); filter:blur(40px);
+    transition:width .3s, height .3s; }
+  .sg-orb{ border-radius:50%; position:relative;
+    background:linear-gradient(135deg,#98c9a3,#b8dac2 55%,#eeeeee);
+    box-shadow:0 0 50px 10px rgba(163,201,168,.45), inset 0 -10px 20px rgba(137,184,144,.25);
+    transition:width .2s ease-out, height .2s ease-out; }
+  .sg-phase{ font-family:var(--sg-display); font-weight:600; font-size:18px; color:var(--sg-sage-800);
+    text-align:center; transition:color .3s; }
+  .sg-phase-sec{ font-family:var(--sg-display); font-weight:600; font-size:18px; color:var(--sg-sage-800);
+    text-align:center; margin-top:2px; }
+  .sg-sess-ctrls{ display:flex; justify-content:center; gap:12px; margin-top:14px; }
+  .sg-pill-btn{ background:rgba(255,255,255,.7); border:1px solid rgba(255,255,255,.5); border-radius:12px;
+    padding:8px 18px; font-size:12px; font-weight:600; color:var(--sg-sage-700); cursor:pointer;
+    font-family:var(--sg-sans); box-shadow:0 1px 3px rgba(0,0,0,.04); transition:background .15s, transform .1s; }
+  .sg-pill-btn:hover{ background:#fff; }
+  .sg-pill-btn:active{ transform:scale(.95); }
+  .sg-pill-btn.quit{ background:#fef2f2; color:#dc2626; border-color:#fecaca; }
+  .sg-pill-btn.quit:hover{ background:#fee2e2; }
+
+  /* —— 完成屏 —— */
+  .sg-done-h{ font-family:var(--sg-display); font-weight:500; font-size:clamp(22px,3.4vh,26px);
+    color:var(--sg-sage-800); text-align:center; letter-spacing:-.02em; }
+  .sg-done-sub{ font-size:12.5px; color:rgba(93,128,100,.9); text-align:center; line-height:1.6;
+    margin-top:8px; padding:0 12px; }
+  .sg-done-sub b{ color:var(--sg-sage-500); font-weight:700; }
+  .sg-done-sub u{ color:var(--sg-sage-600); font-weight:600; text-decoration:underline;
+    text-decoration-color:var(--sg-sage-300); text-decoration-thickness:2px; }
+  .sg-divider{ width:64px; height:1px; background:rgba(203,219,203,.5); margin:clamp(16px,3vh,24px) auto; }
+  .sg-mood-q{ font-family:var(--sg-display); font-size:12px; font-weight:600; color:var(--sg-sage-800); text-align:center; }
+  .sg-moods{ display:flex; justify-content:center; gap:16px; margin-top:14px; }
+  .sg-mood{ display:flex; flex-direction:column; align-items:center; gap:6px; width:64px; padding:8px;
+    border-radius:16px; border:1px solid transparent; background:rgba(255,255,255,.4); cursor:pointer;
+    transition:transform .3s, background .2s, border-color .2s; }
+  .sg-mood:hover{ background:rgba(255,255,255,.75); }
+  .sg-mood.sel{ background:#fff; border-color:var(--sg-sage-300);
+    box-shadow:0 10px 30px -5px rgba(137,184,144,.15); transform:scale(1.05); }
+  .sg-mood .em{ width:40px; height:40px; border-radius:50%; display:grid; place-items:center; font-size:22px;
+    background:var(--sg-sage-50); transition:transform .3s, background .3s; }
+  .sg-mood.sel .em{ transform:scale(1.1); }
+  .sg-mood.sel.better .em{ background:#89D597; }
+  .sg-mood.sel.no_change .em{ background:#FFD966; }
+  .sg-mood.sel.still_restless .em{ background:#F28C8C; }
+  .sg-mood .lb{ font-size:10px; color:var(--sg-sage-700); font-weight:500; }
+  .sg-quote{ font-size:10px; color:var(--sg-sage-500); text-align:center; background:rgba(255,255,255,.4);
+    border:1px solid rgba(255,255,255,.1); border-radius:100px; padding:7px 16px; margin:0 auto;
+    max-width:300px; line-height:1.5; font-weight:500; }
+  .sg-back-btn{ width:100%; padding:14px; border:none; border-radius:24px; background:var(--sg-sage-400);
+    color:#fff; font-weight:600; font-size:14px; cursor:pointer; font-family:var(--sg-sans);
+    transition:background .15s, box-shadow .15s; }
+  .sg-back-btn:hover{ background:var(--sg-sage-500); box-shadow:0 10px 30px -5px rgba(137,184,144,.2); }
+
+  /* —— 中心区通用：让吉祥物/标题在竖向居中 —— */
+  .sg-grow{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:clamp(12px,2.5vh,18px); min-height:0; }
+  .sg-bottom{ flex-shrink:0; display:flex; flex-direction:column; gap:14px; padding-top:14px; }
+
+  /* —— Setup Sheet 浮层（底部滑入，覆盖在 ritual 内）—— */
+  .sg-sheet-overlay{
+    position:absolute; inset:0; z-index:20;
+    display:flex; flex-direction:column; justify-content:flex-end;
+    visibility:hidden; pointer-events:none;
+  }
+  .sg-sheet-overlay.open{ visibility:visible; pointer-events:auto; }
+  .sg-sheet-scrim{
+    position:absolute; inset:0; background:rgba(45,58,48,.18);
+    -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px);
+    opacity:0; transition:opacity .3s ease;
+  }
+  .sg-sheet-overlay.open .sg-sheet-scrim{ opacity:1; }
+  .sg-sheet{
+    position:relative; z-index:1;
+    background:#fff; border-top:1px solid rgba(203,219,203,.4);
+    border-radius:36px 36px 0 0;
+    padding:20px clamp(20px,5vw,28px) 26px;
+    box-shadow:0 -16px 40px -12px rgba(45,58,48,.22);
+    transform:translateY(100%); transition:transform .36s cubic-bezier(.32,.72,0,1);
+    max-height:92%; overflow-y:auto;
+  }
+  .sg-sheet-overlay.open .sg-sheet{ transform:translateY(0); }
+  .sg-sheet-notch{ width:44px; height:5px; border-radius:100px; background:var(--sg-sage-100);
+    margin:0 auto 16px; }
+  .sg-sheet-body{ display:flex; flex-direction:column; gap:15px; text-align:left; }
+  .sg-sheet-title{ font-family:var(--sg-display); font-weight:700; font-size:18px;
+    color:var(--sg-sage-900); letter-spacing:-.01em; margin:0; }
+  .sg-sheet-sub{ font-family:var(--sg-mono); font-size:11px; color:var(--sg-sage-500); margin:3px 0 0; }
+  .sg-sheet-desc{ font-size:12.5px; line-height:1.6; color:var(--sg-sage-600); margin:0; }
+  .sg-sheet-instr{ background:var(--sg-sage-50); border:1px solid var(--sg-sage-100);
+    border-radius:16px; padding:13px 15px; font-size:11.5px; line-height:1.6; color:var(--sg-sage-700); }
+  .sg-sheet-instr strong{ color:var(--sg-sage-800); }
+  .sg-sheet-dur{ display:flex; flex-direction:column; gap:8px; }
+  .sg-sheet-dur-label{ font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--sg-sage-700); margin:0; }
+  .sg-sheet-dur-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .sg-dur-opt{ padding:13px 4px; border-radius:14px; font-size:13px; font-weight:600;
+    font-family:var(--sg-sans); cursor:pointer; border:1px solid transparent;
+    background:rgba(232,243,232,.6); color:var(--sg-sage-700); transition:all .15s; }
+  .sg-dur-opt:hover{ background:var(--sg-sage-100); }
+  .sg-dur-opt.sel{ background:var(--sg-sage-400); color:#fff; box-shadow:0 4px 12px -2px rgba(137,184,144,.4); }
+  .sg-sheet-cta{ display:grid; grid-template-columns:1fr 3fr; gap:8px; padding-top:4px; }
+  .sg-sheet-cancel{ padding:14px 8px; border-radius:18px; font-size:13px; font-weight:600;
+    font-family:var(--sg-sans); cursor:pointer; color:var(--sg-sage-600);
+    background:#fff; border:1px solid var(--sg-sage-200); transition:all .15s; }
+  .sg-sheet-cancel:hover{ background:var(--sg-sage-50); }
+  .sg-sheet-start{ padding:14px; border-radius:18px; font-size:13px; font-weight:600;
+    font-family:var(--sg-sans); cursor:pointer; color:#fff; border:none;
+    background:var(--sg-sage-400); display:flex; align-items:center; justify-content:center; gap:7px;
+    transition:all .15s; }
+  .sg-sheet-start:hover{ background:var(--sg-sage-500); box-shadow:0 10px 30px -5px rgba(137,184,144,.3); }
+  .sg-sheet-start svg{ width:15px; height:15px; }
+</style>
 </head>
 <body data-page="tool" data-root="../">
 
-<!-- minimal header: just the Genki mark + way back, no full nav -->
+<!-- 红框外：站点导航（JS 注入，保持不变） -->
 <div id="site-nav-root"></div>
 
-<!-- ============================================================
-     ARCHITECTURE PLACEHOLDER — the breathing tool itself (visualization,
-     rhythm switcher, etc.) is designed in a separate pass. This is the
-     page shell: routing, header, OG tags, and layout container are final;
-     swap this block for the real tool when ready.
-     ============================================================ -->
-<main class="tool-shell">
-  <div class="tool-eyebrow">Body · Rituals</div>
-  <h1>Breathe</h1>
-  <p>A slow breathing space — follow the light, in your own rhythm.</p>
-  <p class="tool-note">The breathing tool itself is coming together next. This page is live at its real address already.</p>
-  <a class="tool-back" href="../rituals.html">← Back to Rituals</a>
+<main class="breathe-shell">
+  <!-- ════════ 红框 = ritual 容器 ════════ -->
+  <div class="ritual-frame">
+    <!-- ════════ 框内：原生 Sage Breath ════════ -->
+    <div class="sg-root" id="sgRoot">
+
+      <!-- 屏1：首页选择 -->
+      <section class="sg-screen active" id="sg-home">
+        <div class="sg-col">
+          <div class="sg-top">
+            <span></span>
+            <button class="sg-icon-btn" id="sgMuteHome" title="Mute">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+            </button>
+          </div>
+          <div class="sg-grow">
+            <div class="sg-mascot-ring">
+              <div class="sg-bunny"><span class="b-ear l"></span><span class="b-ear r"></span>
+                <span class="b-body"></span><span class="b-paw"></span>
+                <span class="b-eye l"></span><span class="b-eye r"></span>
+                <span class="b-cheek l"></span><span class="b-cheek r"></span></div>
+            </div>
+            <div>
+              <div class="sg-h1">What do you want to<br>achieve with breath?</div>
+              <div class="sg-sub">Select a target to start your breathing exercise</div>
+            </div>
+          </div>
+          <div class="sg-cards" id="sgCards"></div>
+          <div class="sg-wave" id="sgWave"></div>
+        </div>
+      </section>
+
+      <!-- 屏2：呼吸进行 -->
+      <section class="sg-screen" id="sg-session">
+        <div class="sg-col">
+          <div class="sg-top">
+            <div class="sg-timer-pill"><span class="pulse"></span><span id="sgTimer">00:00</span></div>
+            <button class="sg-icon-btn" id="sgMuteSess" title="Mute">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+            </button>
+          </div>
+          <div class="sg-orb-area">
+            <div class="sg-orb-glow" id="sgOrbGlow"></div>
+            <div class="sg-orb" id="sgOrb"></div>
+          </div>
+          <div class="sg-bottom" style="text-align:center;">
+            <div>
+              <div class="sg-phase" id="sgPhase">&#8203;</div>
+              <div class="sg-phase-sec" id="sgPhaseSec"></div>
+            </div>
+            <div class="sg-sess-ctrls">
+              <button class="sg-pill-btn" id="sgPause">Pause</button>
+              <button class="sg-pill-btn quit" id="sgQuit">Quit</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 屏3：完成 + 心情 -->
+      <section class="sg-screen" id="sg-complete">
+        <div class="sg-col">
+          <div class="sg-top">
+            <span></span>
+            <button class="sg-icon-btn" id="sgMuteDone" title="Mute">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+            </button>
+          </div>
+          <div class="sg-grow">
+            <div class="sg-mascot-ring" style="width:clamp(120px,18vh,150px);">
+              <div class="sg-bunny"><span class="b-ear l"></span><span class="b-ear r"></span>
+                <span class="b-body"></span>
+                <span class="b-eye l"></span><span class="b-eye r"></span>
+                <span class="b-cheek l"></span><span class="b-cheek r"></span></div>
+            </div>
+            <div class="sg-done-h">Huuuu... Well done.</div>
+            <div class="sg-done-sub" id="sgDoneSub"></div>
+            <div class="sg-divider"></div>
+            <div>
+              <div class="sg-mood-q">How do you feel now?</div>
+              <div class="sg-moods" id="sgMoods"></div>
+            </div>
+          </div>
+          <div class="sg-bottom">
+            <div class="sg-quote" id="sgQuote"></div>
+            <button class="sg-back-btn" id="sgBack">Back to Home</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Setup Sheet 浮层：点卡片后弹出，选时长后才开始（搬自 Sage 新版） -->
+      <div class="sg-sheet-overlay" id="sgSheetOverlay">
+        <div class="sg-sheet-scrim" id="sgSheetScrim"></div>
+        <div class="sg-sheet" id="sgSheet">
+          <div class="sg-sheet-notch"></div>
+          <div class="sg-sheet-body">
+            <div>
+              <h3 class="sg-sheet-title" id="sgSheetTitle"></h3>
+              <p class="sg-sheet-sub" id="sgSheetSub"></p>
+            </div>
+            <p class="sg-sheet-desc" id="sgSheetDesc"></p>
+            <div class="sg-sheet-instr">💡 <strong>Instructions: </strong><span id="sgSheetInstr"></span></div>
+            <div class="sg-sheet-dur">
+              <h4 class="sg-sheet-dur-label">Duration</h4>
+              <div class="sg-sheet-dur-grid" id="sgSheetDurGrid"></div>
+            </div>
+            <div class="sg-sheet-cta">
+              <button class="sg-sheet-cancel" id="sgSheetCancel">Cancel</button>
+              <button class="sg-sheet-start" id="sgSheetStart">
+                <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+                Start Session
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.sg-root -->
+  </div><!-- /.ritual-frame -->
 </main>
 
+<!-- 红框外：站点 footer（JS 注入，保持不变） -->
 <div id="site-footer-root"></div>
 
 <script src="../assets/nav.js"></script>
 <script src="../assets/main.js"></script>
+
+<!-- ════════════════════════════════════════════════════════════
+     手机壳等比缩放（仅宽屏）。容器层逻辑，与框内 ritual 无关。
+     基准 390×820；按可用空间算 scale（≤1），矮屏自动缩小，
+     内容完整不溢出、不滚动。任何塞进框的 ritual 都受益。
+     ════════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  var BASE_W = 390, BASE_H = 820, MARGIN = 32;
+  var frame = document.querySelector('.ritual-frame');
+  var shell = document.querySelector('.breathe-shell');
+  if (!frame || !shell) return;
+
+  function fit() {
+    // 窄屏（手机）不套壳，清掉 transform，交给 CSS 全屏铺满
+    if (window.innerWidth < 600) { frame.style.transform = ''; return; }
+    var availW = shell.clientWidth  - MARGIN;
+    var availH = shell.clientHeight - MARGIN;
+    var scale = Math.min(availW / BASE_W, availH / BASE_H, 1);
+    frame.style.transform = 'scale(' + scale + ')';
+  }
+
+  fit();
+  window.addEventListener('resize', fit);
+  // 字体/布局就绪后再算一次，避免首帧测量偏差
+  window.addEventListener('load', fit);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+})();
+</script>
+
+<!-- ════════════════════════════════════════════════════════════
+     框内 Sage Breath 逻辑（原生化自 React 项目，逻辑一比一保留）
+     - audioSynth: Web Audio 程序化音频引擎（颂钵/风声/drone）
+     - 三套技法、三屏状态机、orb 缩放、心情记录、禅语
+     全部 .sg- 作用域，window 上只挂一个私有 IIFE，不污染站点。
+     ════════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- 1. Web Audio 引擎（搬自 audio.ts）---------- */
+  var AudioEngine = (function () {
+    function E() { this.ctx=null; this.masterGain=null; this.ambientFilter=null;
+      this.ambientGain=null; this.noiseGain=null; this.inited=false; this.muted=false; }
+    E.prototype.init = function () {
+      if (this.inited) return;
+      try {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        this.ctx = new AC();
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.gain.setValueAtTime(this.muted?0:0.4, this.ctx.currentTime);
+        this.masterGain.connect(this.ctx.destination);
+        this._hum(); this._wind();
+        this.inited = true;
+      } catch (e) {}
+    };
+    E.prototype._hum = function () {
+      var c=this.ctx; if(!c||!this.masterGain) return;
+      var o=c.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(110,c.currentTime);
+      var fifth=c.createOscillator(); fifth.type='sine'; fifth.frequency.setValueAtTime(165,c.currentTime);
+      var f=c.createBiquadFilter(); f.type='lowpass'; f.frequency.setValueAtTime(250,c.currentTime); f.Q.setValueAtTime(5,c.currentTime);
+      var g=c.createGain(); g.gain.setValueAtTime(0.08,c.currentTime);
+      o.connect(f); fifth.connect(f); f.connect(g); g.connect(this.masterGain);
+      o.start(); fifth.start();
+      this.ambientFilter=f; this.ambientGain=g;
+    };
+    E.prototype._wind = function () {
+      var c=this.ctx; if(!c||!this.masterGain) return;
+      var n=2*c.sampleRate, buf=c.createBuffer(1,n,c.sampleRate), out=buf.getChannelData(0);
+      for(var i=0;i<n;i++) out[i]=Math.random()*2-1;
+      var src=c.createBufferSource(); src.buffer=buf; src.loop=true;
+      var wf=c.createBiquadFilter(); wf.type='bandpass'; wf.frequency.setValueAtTime(320,c.currentTime); wf.Q.setValueAtTime(1.5,c.currentTime);
+      var g=c.createGain(); g.gain.setValueAtTime(0.01,c.currentTime);
+      src.connect(wf); wf.connect(g); g.connect(this.masterGain);
+      src.start(); this.noiseGain=g;
+    };
+    E.prototype.toggleMute = function () { this.setMute(!this.muted); return this.muted; };
+    E.prototype.setMute = function (m) {
+      this.muted=m;
+      if(this.ctx&&this.masterGain) this.masterGain.gain.setTargetAtTime(m?0:0.4,this.ctx.currentTime,0.05);
+    };
+    E.prototype.playBowlChime = function (freq) {
+      freq=freq||219.08; this.init();
+      if(!this.ctx||!this.masterGain||this.muted) return;
+      var c=this.ctx, cg=c.createGain();
+      cg.gain.setValueAtTime(0,c.currentTime);
+      cg.gain.linearRampToValueAtTime(0.2,c.currentTime+0.05);
+      cg.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+4.5);
+      var notes=[freq,freq*1.5,freq*2.02,freq*2.58,freq*3.11], amps=[1,0.4,0.25,0.15,0.1];
+      notes.forEach(function(f,idx){
+        var o=c.createOscillator(), og=c.createGain();
+        o.type='sine'; o.frequency.setValueAtTime(f,c.currentTime);
+        og.gain.setValueAtTime(amps[idx],c.currentTime);
+        o.connect(og); og.connect(cg); o.start(); o.stop(c.currentTime+5);
+      });
+      cg.connect(this.masterGain);
+    };
+    E.prototype.playTick = function (p) {
+      p=(p==null?0.5:p); this.init();
+      if(!this.ctx||!this.masterGain||this.muted) return;
+      var c=this.ctx, g=c.createGain();
+      g.gain.setValueAtTime(0,c.currentTime);
+      g.gain.linearRampToValueAtTime(0.08,c.currentTime+0.002);
+      g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+0.08);
+      var o=c.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(600+p*400,c.currentTime);
+      var lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.setValueAtTime(1200,c.currentTime);
+      o.connect(lp); lp.connect(g); g.connect(this.masterGain);
+      o.start(); o.stop(c.currentTime+0.1);
+    };
+    E.prototype.setModulation = function (scale, type) {
+      this.init(); if(!this.ctx||this.muted) return;
+      var c=this.ctx;
+      if(this.ambientFilter&&this.ambientGain){
+        this.ambientFilter.frequency.setTargetAtTime(150+scale*300,c.currentTime,0.1);
+        var hg = type==='hold' ? 0.05 : 0.05+scale*0.06;
+        this.ambientGain.gain.setTargetAtTime(hg,c.currentTime,0.1);
+      }
+      if(this.noiseGain){
+        var wv = type==='inhale' ? 0.004+scale*0.025 : type==='exhale' ? 0.002+scale*0.035 : 0.001;
+        this.noiseGain.gain.setTargetAtTime(wv,c.currentTime,0.15);
+      }
+    };
+    return E;
+  })();
+  var audio = new AudioEngine();
+
+  /* ---------- 2. 数据：三套技法 / 心情 / 禅语（搬自 data.ts）---------- */
+  var TECHNIQUES = [
+    { id:'sigh', name:'Physiological Sigh', sub:'Anxiety Relief · Rapid Calm', icon:'heart',
+      duration:180, durationOptions:[60,180,300],
+      desc:'Two quick inhales followed by a long exhale — a fast way to feel calmer within a few breaths.',
+      instruction:'Inhale deeply through your nose, take a quick second sniff to fully inflate your lungs, then sigh out slowly.',
+      steps:[ {type:'inhale',duration:3.5,text:'Deep Inhale'},
+              {type:'hold',duration:1.5,text:'Quick Double-Inhale'},
+              {type:'exhale',duration:6,text:'Slow Sigh Exhale'} ] },
+    { id:'box', name:'Box Breathing', sub:'Boost Focus · Enter Flow State', icon:'brain',
+      duration:180, durationOptions:[120,180,300],
+      desc:'Commonly used by Navy SEALs, this four-equal-step technique balances the nervous system, boosting focus and decision making.',
+      instruction:'Inhale for 4 seconds, hold for 4 seconds, exhale for 4 seconds, and hold empty for 4 seconds.',
+      steps:[ {type:'inhale',duration:4,text:'Inhale'},
+              {type:'hold',duration:4,text:'Hold Breath'},
+              {type:'exhale',duration:4,text:'Exhale'},
+              {type:'hold',duration:4,text:'Hold Breath'} ] },
+    { id:'478', name:'4-7-8', sub:'Sleep & Relaxation · Deep Relaxation', icon:'moon',
+      duration:180, durationOptions:[180,300,480],
+      desc:'A widely practiced relaxation pattern. The long, slow exhale helps your body settle into a calmer, more restful state.',
+      instruction:'Inhale through nose for 4 seconds, hold breath for 7 seconds, then exhale with a whoosh sound from mouth for 8 seconds.',
+      steps:[ {type:'inhale',duration:4,text:'Inhale'},
+              {type:'hold',duration:7,text:'Hold Breath'},
+              {type:'exhale',duration:8,text:'Exhale fully'} ] },
+  ];
+  var MOODS = [
+    { type:'better', label:'Better', emoji:'😊' },
+    { type:'no_change', label:'No Change', emoji:'😐' },
+    { type:'still_restless', label:'Restless', emoji:'😞' },
+  ];
+  var QUOTES = [
+    { text:'Inhale peace, exhale worries.', author:'Thich Nhat Hanh' },
+    { text:'In the space between inhalation and exhalation lies the silence of the universe.', author:'Meditation Wisdom' },
+    { text:'Every smooth descent is a gentle embrace for your mind.', author:'Sage Breath' },
+    { text:'Without forcing or clinging, simply feel the breath of the present moment.', author:'Mindfulness Practice' },
+    { text:'The present moment is all there is. Deep breath, release the burdens of your mind.', author:'Peaceful Proverb' },
+  ];
+  var ICONS = {
+    heart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>',
+    brain:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"></path><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"></path></svg>',
+    moon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>',
+  };
+  var CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>';
+
+  /* ---------- 3. DOM ---------- */
+  function $(id){ return document.getElementById(id); }
+  var screens = { home:$('sg-home'), session:$('sg-session'), complete:$('sg-complete') };
+  function show(name){ Object.keys(screens).forEach(function(k){ screens[k].classList.remove('active'); }); screens[name].classList.add('active'); }
+
+  /* 渲染首页声波 */
+  (function(){
+    var wave=$('sgWave'), heights=[8,16,24,12,20,28,14,22,10,18,26,12,20,8,16];
+    heights.forEach(function(h,i){ var b=document.createElement('i'); b.style.height=h+'px';
+      b.style.animationDelay=(i*0.08)+'s'; wave.appendChild(b); });
+  })();
+
+  /* 渲染首页卡片 */
+  (function(){
+    var box=$('sgCards');
+    TECHNIQUES.forEach(function(t){
+      var card=document.createElement('button'); card.className='sg-card';
+      card.innerHTML='<div class="sg-card-l"><div class="sg-card-ic">'+ICONS[t.icon]+'</div>'+
+        '<div><div class="sg-card-name">'+t.name+'</div><div class="sg-card-meta">'+t.sub+'</div></div></div>'+
+        '<span class="sg-card-chev">'+CHEVRON+'</span>';
+      card.addEventListener('click', function(){ firstInteract(); openSheet(t); });
+      box.appendChild(card);
+    });
+  })();
+
+  /* 渲染心情按钮 */
+  (function(){
+    var box=$('sgMoods');
+    MOODS.forEach(function(m){
+      var b=document.createElement('button'); b.className='sg-mood '+m.type; b.dataset.type=m.type;
+      b.innerHTML='<span class="em">'+m.emoji+'</span><span class="lb">'+m.label+'</span>';
+      b.addEventListener('click', function(){ pickMood(m.type, b); });
+      box.appendChild(b);
+    });
+  })();
+
+  /* ---------- 4. 状态 ---------- */
+  var cur=null, timeLeft=0, stepIdx=0, stepTimeLeft=0, paused=false, muted=false;
+  var tickTimer=null, accMs=0, moodLocked=false;
+  var hasInteracted=false;
+  function firstInteract(){ if(!hasInteracted){ audio.init(); hasInteracted=true; } }
+
+  /* ---------- 4.5 Setup Sheet 浮层逻辑 ---------- */
+  var sheetTech=null, sheetDuration=180;
+  var overlay=$('sgSheetOverlay'), durGrid=$('sgSheetDurGrid');
+  function openSheet(tech){
+    sheetTech=tech;
+    sheetDuration=tech.durationOptions[1]; // 默认中间档
+    $('sgSheetTitle').textContent=tech.name;
+    $('sgSheetSub').textContent=tech.sub;
+    $('sgSheetDesc').textContent=tech.desc;
+    $('sgSheetInstr').textContent=tech.instruction;
+    // 渲染时长选项
+    durGrid.innerHTML='';
+    tech.durationOptions.forEach(function(opt){
+      var b=document.createElement('button');
+      b.className='sg-dur-opt'+(opt===sheetDuration?' sel':'');
+      b.textContent=(opt/60)+' Min';
+      b.addEventListener('click', function(){
+        firstInteract(); audio.playTick(0.4);
+        sheetDuration=opt;
+        durGrid.querySelectorAll('.sg-dur-opt').forEach(function(x){ x.classList.remove('sel'); });
+        b.classList.add('sel');
+      });
+      durGrid.appendChild(b);
+    });
+    overlay.classList.add('open');
+  }
+  function closeSheet(){ overlay.classList.remove('open'); }
+  $('sgSheetScrim').addEventListener('click', closeSheet);
+  $('sgSheetCancel').addEventListener('click', function(){ firstInteract(); audio.playTick(0.2); closeSheet(); });
+  $('sgSheetStart').addEventListener('click', function(){
+    firstInteract();
+    closeSheet();
+    startSession(sheetTech, sheetDuration);
+  });
+
+  /* ---------- 5. 呼吸会话引擎（搬自 BreathingFlow.tsx 的 100ms tick）---------- */
+  var sessionTotal=180;  // 本次会话选定的总时长（秒）
+  function startSession(tech, duration){
+    cur=tech; sessionTotal=duration||tech.duration||180;
+    timeLeft=sessionTotal; stepIdx=0; paused=false; moodLocked=false;
+    var first=tech.steps[0]; stepTimeLeft=first.duration;
+    setScale(first.type==='inhale'?0.4:first.type==='exhale'?1.0:0.7);
+    show('session');
+    renderTimer(); renderPhase();
+    setTimeout(function(){ audio.playBowlChime(); }, 150);
+    runTick();
+  }
+  function runTick(){
+    if(tickTimer) clearInterval(tickTimer);
+    accMs=0; var freq=100;
+    tickTimer=setInterval(function(){
+      if(paused) return;
+      accMs+=freq;
+      if(accMs>=1000){
+        accMs=0;
+        timeLeft-=1;
+        if(timeLeft<=0){ completeSession(); return; }
+        renderTimer();
+        stepTimeLeft-=1;
+        if(stepTimeLeft<=0){
+          audio.playTick(0.6);
+          stepIdx=(stepIdx+1)%cur.steps.length;
+          stepTimeLeft=cur.steps[stepIdx].duration;
+        }
+        renderPhase();
+      }
+      // orb 缩放（每 100ms 平滑）
+      var step=cur.steps[stepIdx], dur=step.duration;
+      var elapsedOnStep=dur-(stepTimeLeft-accMs/1000);
+      var ratio=Math.min(1,Math.max(0,elapsedOnStep/dur));
+      var scale=0.7;
+      if(step.type==='inhale') scale=0.4+ratio*0.6;
+      else if(step.type==='exhale') scale=1.0-ratio*0.6;
+      else { var prev=cur.steps[(stepIdx-1+cur.steps.length)%cur.steps.length];
+        var base=prev&&prev.type==='inhale'?1.0:0.4;
+        scale=base+Math.sin((accMs/1000)*Math.PI)*0.015; }
+      setScale(scale);
+      audio.setModulation(scale, step.type);
+    }, freq);
+  }
+  function setScale(s){
+    var orb=$('sgOrb'), glow=$('sgOrbGlow');
+    var px=Math.round(s*230), gpx=Math.round(s*290);
+    orb.style.width=px+'px'; orb.style.height=px+'px';
+    glow.style.width=gpx+'px'; glow.style.height=gpx+'px';
+  }
+  function fmt(sec){ var m=Math.floor(sec/60), s=sec%60; return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
+  function renderTimer(){ $('sgTimer').textContent=fmt(Math.max(timeLeft,0)); }
+  function renderPhase(){
+    var step=cur.steps[stepIdx];
+    $('sgPhase').textContent=step.text;
+    $('sgPhaseSec').textContent=Math.max(stepTimeLeft,0)+'s';
+  }
+  function completeSession(){
+    if(tickTimer) clearInterval(tickTimer);
+    audio.playBowlChime(293.66);
+    var mins=Math.round(sessionTotal/60);
+    $('sgDoneSub').innerHTML='You have completed <b>'+mins+' minutes</b> of<br><u>'+cur.name+'</u> session.';
+    var q=QUOTES[Math.floor(Math.random()*QUOTES.length)];
+    $('sgQuote').innerHTML='💚 '+q.text+' — '+q.author;
+    document.querySelectorAll('.sg-mood').forEach(function(m){ m.classList.remove('sel'); });
+    moodLocked=false;
+    show('complete');
+  }
+  function pickMood(type, btn){
+    if(moodLocked) return;
+    moodLocked=true; firstInteract(); audio.playTick(1.2);
+    document.querySelectorAll('.sg-mood').forEach(function(m){ m.classList.remove('sel'); });
+    btn.classList.add('sel');
+  }
+
+  /* ---------- 6. 控件 ---------- */
+  $('sgPause').addEventListener('click', function(){
+    firstInteract(); audio.playTick(0.2); paused=!paused;
+    this.textContent = paused ? 'Resume' : 'Pause';
+  });
+  $('sgQuit').addEventListener('click', function(){
+    firstInteract(); audio.playTick(0.9);
+    if(tickTimer) clearInterval(tickTimer);
+    $('sgPause').textContent='Pause';
+    show('home');
+  });
+  $('sgBack').addEventListener('click', function(){
+    firstInteract(); audio.playBowlChime();
+    $('sgPause').textContent='Pause';
+    show('home');
+  });
+  function muteToggle(){ firstInteract(); muted=audio.toggleMute(); updateMuteIcons(); }
+  function updateMuteIcons(){
+    var on='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>';
+    var off='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>';
+    ['sgMuteHome','sgMuteSess','sgMuteDone'].forEach(function(id){ var el=$(id); if(el) el.innerHTML = muted?off:on; });
+  }
+  ['sgMuteHome','sgMuteSess','sgMuteDone'].forEach(function(id){ $(id).addEventListener('click', muteToggle); });
+
+})();
+</script>
+
 </body>
 </html>
