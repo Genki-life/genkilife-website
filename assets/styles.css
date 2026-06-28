@@ -18,11 +18,11 @@
   /* NAV */
   /* sticky header that morphs into a floating pill on scroll */
   #site-nav-root { position: sticky; top: 0; z-index: 50; }
-  .site-header { transition: padding 0.4s cubic-bezier(.22,.61,.36,1); padding: 0; }
-  .site-header .wrap { transition: max-width 0.4s cubic-bezier(.22,.61,.36,1); }
+  .site-header { padding: 0; }
+  .site-header .wrap { }
   .nav { display: flex; align-items: center; justify-content: space-between; padding: 30px 0;
     border: 1px solid transparent; border-radius: 100px;
-    transition: padding 0.4s cubic-bezier(.22,.61,.36,1), background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease; }
+    transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease; }
   /* scrolled state — the pill */
   .site-header.scrolled { }
   .site-header.scrolled .wrap { }
@@ -35,7 +35,7 @@
     box-shadow: 0 8px 30px rgba(20,18,40,0.08);
     will-change: backdrop-filter;
   }
-  .brand { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: 800; letter-spacing: -0.02em; transition: font-size 0.4s ease; }
+  .brand { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
   .site-header.scrolled .brand { font-size: 20px; }
   .site-header.scrolled .brand svg { width: 24px; height: 24px; }
   .nav-links { display: flex; align-items: center; gap: 40px; font-size: 15px; color: var(--ink-2); }
