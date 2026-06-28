@@ -73,15 +73,15 @@
     }).join("");
     return (
       '<div class="mobile-menu"><div class="mm-inner">' +
+        '<a class="mm-link" href="index.html#manifesto">Manifesto</a>' +
+        '<a class="mm-link" href="index.html#philosophy">Philosophy</a>' +
+        '<a class="mm-link" href="index.html#five-layers">The five layers</a>' +
         '<div class="mm-acc" id="mmRituals">' +
           '<div class="mm-acc-head">Rituals <span class="chev"></span></div>' +
           '<div class="mm-acc-body">' + dims +
             '<a class="mm-tool" href="' + ROOT + 'rituals.html" style="font-weight:600;color:var(--accent);padding-left:8px;">Open Rituals &rarr;</a>' +
           '</div>' +
         '</div>' +
-        '<a class="mm-link" href="index.html#five-layers">The five layers</a>' +
-        '<a class="mm-link" href="index.html#philosophy">Philosophy</a>' +
-        '<a class="mm-link" href="index.html#manifesto">Manifesto</a>' +
         '<a class="mm-cta" href="index.html#waitlist">Join the waitlist</a>' +
       '</div></div>'
     );
@@ -93,12 +93,12 @@
       '<header class="site-header" id="siteHeader"><div class="wrap"><div class="nav">' +
         '<a class="brand" href="' + ROOT + 'index.html" style="text-decoration:none;color:inherit;">' + MARK + " Genki</a>" +
         '<div class="nav-links">' +
+          '<a href="' + ROOT + 'index.html#manifesto">Manifesto</a>' +
+          '<a href="' + ROOT + 'index.html#philosophy">Philosophy</a>' +
+          '<a href="' + ROOT + 'index.html#five-layers">The five layers</a>' +
           '<span class="has-mega">' +
             '<button class="rituals-trigger" id="ritualsTrigger" aria-haspopup="true" aria-expanded="false">Rituals <span class="chev"></span></button>' +
           '</span>' +
-          '<a href="' + ROOT + 'index.html#philosophy">Philosophy</a>' +
-          '<a href="' + ROOT + 'index.html#five-layers">The five layers</a>' +
-          '<a href="' + ROOT + 'index.html#manifesto">Manifesto</a>' +
           '<a href="' + ROOT + 'index.html#waitlist" class="nav-cta">Join the waitlist</a>' +
         '</div>' +
         '<button class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>' +
@@ -151,12 +151,7 @@
   var header = document.getElementById("siteHeader");
   if (!header) return;
 
-  /* ---- Sticky pill on scroll ----
-     Threshold 100px (not 40): gives the CSS transition enough room to
-     complete before scrollY could bounce back below the trigger point.
-     Prevents the "shaking on transition" bug caused by padding-top change
-     during .scrolled nudging content up → scrollY drops below threshold →
-     class removed → content drops back → scrollY rises → loop. ---- */
+  /* ---- Sticky pill on scroll (both full + minimal headers use this) ---- */
   function onScroll() {
     if (window.scrollY > 40) header.classList.add("scrolled");
     else header.classList.remove("scrolled");
