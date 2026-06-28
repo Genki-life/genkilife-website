@@ -25,14 +25,14 @@
   #site-nav-root { position: sticky; top: 0; z-index: 50; }
   .site-header { padding: 0; }
   .site-header .wrap { position: relative; }
-  .nav { display: flex; align-items: center; justify-content: space-between; padding: 30px 0;
+  .nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 0;
     border: 1px solid transparent; border-radius: 100px;
     transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease; }
   /* scrolled state — the pill. NOTE: padding stays the SAME (30px 0) to keep
      header height identical; we only nudge horizontal padding which does NOT
      change height. Visual lift = background + border + shadow only. */
   .site-header.scrolled .nav {
-    padding: 30px 24px;
+    padding: 18px 24px;
     background: rgba(255,255,255,0.72);
     -webkit-backdrop-filter: saturate(180%) blur(14px);
     backdrop-filter: saturate(180%) blur(14px);
