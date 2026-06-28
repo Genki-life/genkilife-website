@@ -16,18 +16,23 @@
   a { color: inherit; text-decoration: none; }
 
   /* NAV */
-  /* sticky header that morphs into a floating pill on scroll */
+  /* sticky header that morphs into a floating pill on scroll.
+     ROOT-CAUSE FIX for the shake: the .scrolled state must NOT change the
+     header's occupied HEIGHT, or scrollY oscillates across the threshold and
+     the class toggles every frame. So .nav padding stays CONSTANT (30px 0)
+     in both states — the "pill" is conveyed ONLY by background/border/shadow/
+     radius, never by changing padding, max-width, or font-size. */
   #site-nav-root { position: sticky; top: 0; z-index: 50; }
   .site-header { padding: 0; }
-  .site-header .wrap { }
+  .site-header .wrap { position: relative; }
   .nav { display: flex; align-items: center; justify-content: space-between; padding: 30px 0;
     border: 1px solid transparent; border-radius: 100px;
     transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease; }
-  /* scrolled state — the pill */
-  .site-header.scrolled { }
-  .site-header.scrolled .wrap { }
+  /* scrolled state — the pill. NOTE: padding stays the SAME (30px 0) to keep
+     header height identical; we only nudge horizontal padding which does NOT
+     change height. Visual lift = background + border + shadow only. */
   .site-header.scrolled .nav {
-    padding: 12px 14px 12px 24px;
+    padding: 30px 24px;
     background: rgba(255,255,255,0.72);
     -webkit-backdrop-filter: saturate(180%) blur(14px);
     backdrop-filter: saturate(180%) blur(14px);
@@ -36,11 +41,9 @@
     will-change: backdrop-filter;
   }
   .brand { display: flex; align-items: center; gap: 10px; font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
-  .site-header.scrolled .brand { font-size: 20px; }
-  .site-header.scrolled .brand svg { width: 24px; height: 24px; }
   .nav-links { display: flex; align-items: center; gap: 40px; font-size: 15px; color: var(--ink-2); }
   .nav-links a:hover { color: var(--ink); }
-  .nav-cta { padding: 11px 22px; background: var(--ink); color: #fff !important; border-radius: 100px; font-size: 14px; font-weight: 600; }
+    .nav-cta { padding: 11px 22px; background: var(--ink); color: #fff !important; border-radius: 100px; font-size: 14px; font-weight: 600; }
 
   /* HERO */
   .hero { position: relative; display: grid; grid-template-columns: 1.06fr 0.94fr; align-items: center; gap: 56px; padding: 70px 0 110px; }
