@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Citrine 369 — Manifestation Ritual</title>
+<meta name="description" content="An interactive 3-6-9 manifestation ritual. For entertainment and self-reflection only.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+
+<!-- 注意：本工具为独立技术验证项目，保留原型金色神秘主义视觉，
+     不套用 Genki 官网 styles.css 的紫白设计 token（会互相冲突）。
+     它只是"借住"在 rituals/ 目录下，nav/footer 仍复用官网注入以保持站内一致。 -->
+
+<style>
+  /* ============================================================
+     Citrine369 Manifestation — self-contained gold aesthetic.
+     Translated from the React/Tailwind prototype into vanilla
+     HTML/CSS/JS, single file, zero build. Screen state machine
+     mirrors breathe.html's .xx-screen/.active pattern so it slots
+     into the same site architecture.
+     ============================================================ */
+
+  :root {
+    --c-bg: #050505;
+    --c-bg-soft: #0e0d0b;
+    --c-gold: #d4af37;
+    --c-gold-bright: #ffdf7a;
+    --c-gold-deep: #ca8a04;
+    --c-amber: #f59e0b;
+    --c-red: #ef4444;
+    --c-ink: #ead8be;
+    --c-ink-dim: #a1998d;
+    --c-ink-faint: #78716c;
+    --c-line: rgba(212,175,55,0.12);
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  /* 手机壳外层：宽屏时把整个应用装进一个居中的手机框；
+     窄屏(<=520px)时退化为全屏，手机框消失。 */
+  .ct-phoneframe-outer {
+    min-height: calc(100vh - 90px);
+    min-height: calc(100dvh - 90px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(0px, 3vh, 32px) clamp(0px, 4vw, 32px);
+    background:
+      radial-gradient(circle at 50% 0%, #14100a 0%, #050505 55%);
+  }
+
+  .ct-phoneframe {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    height: min(860px, calc(100dvh - 120px));
+    background: var(--c-bg);
+    border-radius: 44px;
+    border: 1px solid rgba(212,175,55,0.18);
+    box-shadow:
+      0 0 0 10px #0a0a0a,
+      0 0 0 11px rgba(212,175,55,0.10),
+      0 40px 90px rgba(0,0,0,0.7),
+      0 0 80px rgba(212,175,55,0.06);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* 顶部听筒装饰（纯视觉，宽屏手机壳时显示） */
+  .ct-phoneframe::before {
+    content: "";
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 5px;
+    border-radius: 100px;
+    background: rgba(212,175,55,0.15);
+    z-index: 200;
+    pointer-events: none;
+  }
+
+  @media (max-width: 520px) {
+    .ct-phoneframe-outer { padding: 0; }
+    .ct-phoneframe {
+      max-width: 100%;
+      height: calc(100dvh - 90px);
+      border-radius: 0;
+      border: none;
+      box-shadow: none;
+    }
+    .ct-phoneframe::before { display: none; }
+  }
+
+  /* ---------- screen stack ---------- */
+  .ct-stage {
+    position: relative;
+    flex: 1;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .ct-screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--c-bg);
+    color: var(--c-ink);
+    font-family: var(--sans);
+  }
+  .ct-screen.active { opacity: 1; pointer-events: auto; }
+
+  /* shared ambient layers */
+  .ct-ambient {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .ct-ambient .glow {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 320px; height: 320px;
+    transform: translate(-50%,-50%);
+    border-radius: 50%;
+    background: rgba(212,175,55,0.05);
+    filter: blur(80px);
+  }
+
+  .ct-geo-spin {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 110%; aspect-ratio: 1/1;
+    transform: translate(-50%,-50%);
+    opacity: 0.04;
+    animation: ct-spin 120s linear infinite;
+  }
+  @keyframes ct-spin { from { transform: translate(-50%,-50%) rotate(0); } to { transform: translate(-50%,-50%) rotate(360deg); } }
+  @keyframes ct-spin-rev { from { transform: translate(-50%,-50%) rotate(0); } to { transform: translate(-50%,-50%) rotate(-360deg); } }
+
+  .ct-inner {
+    position: relative;
+    z-index: 10;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: clamp(18px, 4vh, 26px) clamp(18px, 5vw, 24px);
+  }
+
+  /* ---------- shared header ---------- */
+  .ct-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .ct-back {
+    width: 38px; height: 38px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(16,15,14,0.8);
+    color: var(--c-ink);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 15px;
+  }
+  .ct-back:hover { border-color: rgba(212,175,55,0.4); color: var(--c-gold); }
+  .ct-eyebrow {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 100px;
+    border: 1px solid rgba(212,175,55,0.2);
+    background: rgba(20,18,15,0.9);
+    font-family: var(--mono); font-size: 8px; letter-spacing: 0.2em;
+    color: var(--c-gold); text-transform: uppercase;
+  }
+  .ct-eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--c-gold); }
+  .ct-head-title { font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.18em; color: #fff; text-transform: uppercase; margin-top: 5px; }
+
+  /* ---------- buttons ---------- */
+  .ct-cta {
+    width: 100%;
+    padding: 15px;
+    border: none; border-radius: 14px;
+    background: linear-gradient(90deg, #fbbf24, #f59e0b, #d97706);
+    color: #050505;
+    font-family: var(--mono); font-weight: 800; font-size: 11px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    box-shadow: 0 4px 25px rgba(212,175,55,0.35);
+    transition: transform 0.15s ease, filter 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ct-cta:hover { filter: brightness(1.1); }
+  .ct-cta:active { transform: scale(0.97); }
+  .ct-cta.solid { background: var(--c-gold); }
+  .ct-cta.solid:hover { background: var(--c-gold-bright); }
+  .ct-cta.danger { background: linear-gradient(90deg, #ef4444, #facc15); }
+
+  /* ---------- glass card ---------- */
+  .ct-glass {
+    position: relative;
+    background: linear-gradient(to bottom, rgba(18,15,10,0.9), rgba(7,7,7,0.95));
+    border: 1px solid rgba(212,175,55,0.4);
+    border-radius: 24px;
+    padding: 20px;
+    box-shadow: 0 0 40px rgba(212,175,55,0.1);
+    overflow: hidden;
+  }
+  .ct-corner { position: absolute; width: 14px; height: 14px; }
+  .ct-corner.tl { top: 12px; left: 12px; border-top: 2px solid rgba(212,175,55,0.3); border-left: 2px solid rgba(212,175,55,0.3); }
+  .ct-corner.tr { top: 12px; right: 12px; border-top: 2px solid rgba(212,175,55,0.3); border-right: 2px solid rgba(212,175,55,0.3); }
+  .ct-corner.bl { bottom: 12px; left: 12px; border-bottom: 2px solid rgba(212,175,55,0.3); border-left: 2px solid rgba(212,175,55,0.3); }
+  .ct-corner.br { bottom: 12px; right: 12px; border-bottom: 2px solid rgba(212,175,55,0.3); border-right: 2px solid rgba(212,175,55,0.3); }
+
+  @keyframes ct-pulse-gold {
+    0%,100% { box-shadow: 0 0 15px rgba(212,175,55,0.15), inset 0 0 10px rgba(212,175,55,0.05); border-color: rgba(212,175,55,0.3); }
+    50% { box-shadow: 0 0 30px rgba(212,175,55,0.4), inset 0 0 20px rgba(212,175,55,0.15); border-color: rgba(212,175,55,0.6); }
+  }
+  @keyframes ct-float { 0%,100% { transform: translateY(0);} 50% { transform: translateY(-8px);} }
+  @keyframes ct-ping { 0% { transform: scale(1); opacity: 0.6;} 75%,100% { transform: scale(2.2); opacity: 0;} }
+  @keyframes ct-fade-up { from { opacity: 0; transform: translateY(20px);} to { opacity: 1; transform: translateY(0);} }
+  @keyframes ct-shimmer { 0% { transform: translateX(-100%) skewX(-12deg);} 100% { transform: translateX(300%) skewX(-12deg);} }
+
+  .ct-spin-slow { animation: ct-spin 40s linear infinite; }
+  .ct-spin-rev { animation: ct-spin-rev 25s linear infinite; }
+
+  /* ---------- welcome ---------- */
+  .ct-vortex-spark {
+    position: absolute;
+    border-radius: 50%;
+    background: linear-gradient(to right, #ffd65c, #d4af37);
+    box-shadow: 0 0 8px rgba(251,191,36,0.7);
+    animation: ct-vortex var(--dur) infinite linear;
+    animation-delay: var(--delay);
+  }
+  @keyframes ct-vortex {
+    0% { transform: rotate(var(--a)) translateX(var(--d)) rotate(0) scale(0.2); opacity: 0; }
+    15% { opacity: 0.9; }
+    80% { opacity: 0.8; }
+    100% { transform: rotate(calc(var(--a) + 540deg)) translateX(0) rotate(-540deg) scale(0.05); opacity: 0; }
+  }
+  .ct-crystal {
+    position: relative;
+    width: 130px; height: 130px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid var(--c-gold);
+    background: #070707;
+    animation: ct-crystal-pulse 3.5s ease-in-out infinite;
+    display: flex; align-items: center; justify-content: center;
+  }
+  @keyframes ct-crystal-pulse {
+    0%,100% { transform: scale(1); box-shadow: 0 0 35px rgba(212,175,55,0.3);}
+    50% { transform: scale(1.05); box-shadow: 0 0 65px rgba(212,175,55,0.65);}
+  }
+  .ct-crystal-core {
+    position: absolute; inset: 2px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 30%, #ffe9a8, #d4af37 40%, #7a5a12 75%, #1a1205 100%);
+    filter: brightness(1.05);
+  }
+
+  /* ---------- category grid ---------- */
+  .ct-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .ct-cat {
+    position: relative;
+    min-height: 138px;
+    padding: 18px;
+    border-radius: 20px;
+    display: flex; flex-direction: column;
+    align-items: flex-start; text-align: left;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.05);
+    background: rgba(18,17,14,0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ct-cat:hover, .ct-cat:active {
+    border-color: rgba(212,175,55,0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(212,175,55,0.12);
+  }
+  .ct-cat-icon {
+    width: 40px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 12px;
+    background: rgba(212,175,55,0.12);
+    color: var(--c-gold);
+    margin-bottom: 14px;
+    font-size: 18px;
+  }
+  .ct-cat-title { font-size: 13px; font-weight: 600; letter-spacing: 0.03em; color: var(--c-ink); }
+  .ct-cat-sub { font-family: var(--mono); font-size: 8.5px; color: var(--c-ink-faint); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .ct-cat-arrow { position: absolute; bottom: 12px; right: 12px; color: rgba(212,175,55,0.4); font-size: 14px; }
+
+  /* ---------- dial ---------- */
+  .ct-dial {
+    position: relative;
+    width: 176px; height: 176px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+    background: radial-gradient(circle, #0e0d0b 45%, #18140e 75%, #050505 100%);
+    box-shadow: 0 0 35px rgba(212,175,55,0.08), inset 0 0 25px rgba(0,0,0,0.9);
+  }
+  .ct-dial:active { cursor: grabbing; }
+  .ct-dial-svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); pointer-events: none; }
+  .ct-dial-knob {
+    position: absolute; width: 158px; height: 158px;
+    border-radius: 50%;
+    pointer-events: none;
+    transition: transform 0.1s ease-out;
+    display: flex; justify-content: center;
+  }
+  .ct-dial-knob .nub {
+    position: absolute; top: 6px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: linear-gradient(to bottom, #ffea9f, #ca8a04);
+    box-shadow: 0 0 12px rgba(212,175,55,0.9);
+    border: 1px solid #000;
+  }
+  .ct-dial-center { z-index: 10; text-align: center; pointer-events: none; }
+  .ct-dial-center .lbl { font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; color: var(--c-ink-faint); text-transform: uppercase; }
+  .ct-dial-center .val { font-family: var(--mono); font-size: 26px; font-weight: 700; color: #fff; margin-top: 2px; }
+  .ct-dial-center .unit { font-family: var(--mono); font-size: 10px; color: var(--c-ink-dim); }
+
+  /* affirmation value chip */
+  .ct-chip {
+    display: inline-block;
+    padding: 5px 12px; margin: 0 3px;
+    border-radius: 12px;
+    background: rgba(29,23,10,0.95);
+    border: 1px solid rgba(212,175,55,0.6);
+    color: var(--c-gold-bright);
+    font-family: var(--mono); font-weight: 700;
+    min-width: 70px; text-align: center;
+    animation: ct-pulse-gold 3s ease-in-out infinite;
+  }
+
+  /* preset chips row */
+  .ct-presets { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 14px; }
+  .ct-preset {
+    padding: 6px 12px; border-radius: 100px;
+    border: 1px solid rgba(212,175,55,0.2);
+    background: rgba(11,10,9,0.6);
+    color: var(--c-ink-faint);
+    font-family: var(--mono); font-size: 10px;
+    cursor: pointer; transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ct-preset.on { background: rgba(212,175,55,0.15); color: var(--c-gold); border-color: rgba(212,175,55,0.5); }
+
+  /* ---------- segmented toggle ---------- */
+  .ct-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+  .ct-seg button {
+    padding: 9px; border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.05);
+    background: rgba(11,10,9,0.6);
+    color: var(--c-ink-faint);
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.05em;
+    cursor: pointer; transition: all 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ct-seg button.on { background: rgba(212,175,55,0.15); color: var(--c-gold); border-color: rgba(212,175,55,0.5); box-shadow: 0 0 12px rgba(212,175,55,0.15); }
+
+  /* ---------- inputs ---------- */
+  .ct-input {
+    padding: 7px 12px; border-radius: 12px;
+    background: rgba(29,23,10,0.9);
+    border: 1px solid rgba(212,175,55,0.6);
+    color: var(--c-gold-bright);
+    font-family: var(--mono); font-weight: 700; text-align: center;
+    outline: none;
+    transition: all 0.2s ease;
+  }
+  .ct-input:focus { border-color: var(--c-gold-bright); box-shadow: 0 0 0 2px rgba(255,214,92,0.25); }
+  .ct-input::placeholder { color: #57493a; }
+
+  /* tabs (real estate style) */
+  .ct-tabs { display: flex; gap: 6px; width: 100%; max-width: 300px; padding: 4px; border-radius: 16px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); }
+  .ct-tab { flex: 1; padding: 8px 4px; border-radius: 12px; border: 1px solid transparent; background: transparent; color: var(--c-ink-faint); font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; transition: all 0.3s ease; -webkit-tap-highlight-color: transparent; }
+  .ct-tab.on { background: rgba(212,175,55,0.2); color: var(--c-gold-bright); border-color: rgba(212,175,55,0.6); box-shadow: 0 0 10px rgba(212,175,55,0.2); }
+
+  /* particle host */
+  .ct-particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .ct-particle { position: absolute; pointer-events: none; will-change: transform, opacity; }
+
+  /* ---------- transition ---------- */
+  .ct-alch-core { position: relative; width: 150px; height: 150px; display: flex; align-items: center; justify-content: center; }
+  .ct-alch-ring { position: absolute; inset: 0; border-radius: 50%; border: 1px solid rgba(212,175,55,0.3); }
+  @keyframes ct-vortex-spin { to { transform: rotate(-360deg); } }
+  .ct-alch-swirl { position: absolute; width: 120px; height: 120px; border-radius: 50%; border: 2px dashed rgba(212,175,55,0.4); animation: ct-vortex-spin 3s linear infinite; }
+
+  /* ---------- manifestation / ritual ---------- */
+  .ct-orb-btn {
+    position: relative;
+    width: 150px; height: 150px; border-radius: 50%;
+    border: 2px solid var(--c-gold);
+    background: radial-gradient(circle at 40% 35%, #2a2008, #0e0b05 70%);
+    color: var(--c-gold-bright);
+    font-family: var(--mono); font-weight: 700; font-size: 13px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    box-shadow: 0 0 40px rgba(212,175,55,0.3);
+    transition: transform 0.1s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ct-orb-btn:active:not(:disabled) { transform: scale(0.94); }
+  .ct-orb-btn:disabled { opacity: 0.5; cursor: not-allowed; border-color: var(--c-ink-faint); color: var(--c-ink-faint); box-shadow: none; }
+  .ct-orb-count { font-size: 30px; font-weight: 800; color: #fff; }
+
+  .ct-phase-dots { display: flex; gap: 20px; justify-content: center; margin: 18px 0; }
+  .ct-phase-dot { display: flex; flex-direction: column; align-items: center; gap: 5px; font-family: var(--mono); font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--c-ink-faint); }
+  .ct-phase-dot .ring { width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(212,175,55,0.25); display: flex; align-items: center; justify-content: center; font-size: 11px; }
+  .ct-phase-dot.on .ring { border-color: var(--c-gold); color: var(--c-gold); box-shadow: 0 0 12px rgba(212,175,55,0.3); }
+  .ct-phase-dot.done .ring { background: rgba(212,175,55,0.2); border-color: var(--c-gold); color: var(--c-gold-bright); }
+
+  .ct-float-word {
+    position: absolute; left: 50%; top: 40%;
+    transform: translateX(-50%);
+    font-family: var(--mono); font-size: 13px; letter-spacing: 0.1em;
+    color: var(--c-gold-bright);
+    text-shadow: 0 0 10px rgba(212,175,55,0.6);
+    pointer-events: none; z-index: 300;
+    white-space: nowrap;
+    animation: ct-float-up 2s ease-out forwards;
+  }
+  @keyframes ct-float-up { 0% { opacity: 0; transform: translate(-50%, 0) scale(0.9);} 20% { opacity: 1;} 100% { opacity: 0; transform: translate(-50%, -120px) scale(1.1);} }
+
+  .ct-flash { position: absolute; inset: 0; background: radial-gradient(circle, #fff8e1, #ffd65c 40%, transparent 75%); z-index: 400; pointer-events: none; opacity: 0; }
+  .ct-flash.go { animation: ct-flash-anim 1.4s ease-out forwards; }
+  @keyframes ct-flash-anim { 0% { opacity: 0;} 15% { opacity: 1;} 100% { opacity: 0;} }
+
+  /* ---------- poster modal ---------- */
+  .ct-modal { position: absolute; inset: 0; z-index: 500; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 24px; }
+  .ct-modal.open { display: flex; animation: ct-fade-up 0.4s ease; }
+  .ct-poster {
+    width: 100%; max-width: 320px;
+    border-radius: 20px; overflow: hidden;
+    background: linear-gradient(160deg, #1a1408, #050505);
+    border: 2px solid var(--c-gold);
+    box-shadow: 0 0 50px rgba(212,175,55,0.3);
+    padding: 28px 22px;
+    text-align: center;
+  }
+
+  /* debug */
+  .ct-debug { position: absolute; top: 8px; right: 8px; z-index: 350; font-family: var(--mono); font-size: 8px; padding: 4px 7px; border-radius: 6px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.3); cursor: pointer; }
+  .ct-debug:hover { color: rgba(255,255,255,0.7); }
+
+  .ct-note { font-family: var(--mono); font-size: 7.5px; letter-spacing: 0.15em; color: #5c564c; text-transform: uppercase; text-align: center; margin-top: 10px; }
+
+  .ct-spinner { width: 32px; height: 32px; border: 2px solid rgba(212,175,55,0.2); border-top-color: var(--c-gold); border-radius: 50%; animation: ct-spin-simple 0.8s linear infinite; }
+  @keyframes ct-spin-simple { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body data-page="tool" data-root="../">
+
+<div id="site-nav-root"></div>
+
+<main class="ct-phoneframe-outer">
+  <div class="ct-phoneframe">
+    <div class="ct-stage" id="ct-stage"><!-- screens injected/rendered below --></div>
+  </div>
+</main>
+
+<div id="site-footer-root"></div>
+
+<script>
+/* ============================================================
+   Citrine 369 · Intention Ritual — vanilla JS, single file.
+   Theme: 设定意图 / 专注当下 / 反思成长（合规版，无任何结果承诺）。
+   8-screen state machine mirrors breathe.html architecture.
+   ============================================================ */
+(function () {
+  "use strict";
+
+  /* ---------------------------------------------------------
+     配置区 —— 所有需要后端的地方集中在这里封装。
+     现在走"降级模式"：纯前端可跑通。将来接 Go 后端只改这几个函数，
+     不用动任何页面逻辑。
+     --------------------------------------------------------- */
+  var CONFIG = {
+    // 将来指向你的 Go 微服务地址，例如 "https://genki-llm.up.railway.app"
+    // 留空则前端走本地降级（LLM 用模板兜底、session 只存 localStorage）。
+    BACKEND_BASE: ""
+  };
+
+  /* 匿名身份识别：UUID + localStorage（+ 将来后端 upsert）
+     —— 跟之前 demo 里讨论的方案完全一致。 */
+  var Identity = {
+    uid: null,
+    init: function () {
+      try {
+        this.uid = localStorage.getItem("citrine_uid");
+        if (!this.uid) {
+          this.uid = (crypto && crypto.randomUUID) ? crypto.randomUUID()
+                     : "uid-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+          localStorage.setItem("citrine_uid", this.uid);
+        }
+      } catch (e) { this.uid = "uid-ephemeral-" + Date.now(); }
+      this.sync();
+      return this.uid;
+    },
+    // 将来接后端：POST {uid} -> upsert(uid, last_seen)。现在只是空跑。
+    sync: function () {
+      if (!CONFIG.BACKEND_BASE) return; // 降级：不调后端
+      try {
+        fetch(CONFIG.BACKEND_BASE + "/api/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Citrine-Uid": this.uid },
+          body: JSON.stringify({ uid: this.uid })
+        }).catch(function () {});
+      } catch (e) {}
+    }
+  };
+
+  /* LLM 接入点：过场页生成一句个性化的意图语。
+     将来接 Go 后端 -> Gemini。现在后端为空时用本地模板兜底，
+     保证前端能纯静态跑通。 */
+  function generateIntentionLine(context) {
+    // context = { area, detail, value }
+    if (!CONFIG.BACKEND_BASE) {
+      return Promise.resolve(localIntentionFallback(context));
+    }
+    return fetch(CONFIG.BACKEND_BASE + "/api/intention", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Citrine-Uid": Identity.uid },
+      body: JSON.stringify(context)
+    })
+      .then(function (r) { if (!r.ok) throw new Error("bad status"); return r.json(); })
+      .then(function (d) { return d.line || localIntentionFallback(context); })
+      .catch(function () { return localIntentionFallback(context); });
+  }
+
+  // 本地兜底文案（合规：只谈意图与专注，不承诺结果）
+  function localIntentionFallback(ctx) {
+    var lines = {
+      FOCUS: [
+        "For the next stretch of time, your attention belongs to one thing.",
+        "You are choosing to be here, fully, for " + (ctx.value || "a while") + "."
+      ],
+      CALM: [
+        "Let the next few breaths be slower than the ones before.",
+        "Nothing to fix right now — just softer, quieter attention."
+      ],
+      VITALITY: [
+        "You are setting aside space to move, in your own way.",
+        "A small intention to feel more alive in your body today."
+      ],
+      BOND: [
+        "You are holding someone in mind, and choosing to reach toward them.",
+        "A quiet intention to close a little distance with " + (ctx.detail || "someone who matters") + "."
+      ]
+    };
+    var pool = lines[ctx.area] || lines.FOCUS;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  /* ---------------------------------------------------------
+     Web Audio —— 保留原型的频率音效（首次交互后才激活）。
+     --------------------------------------------------------- */
+  var Sound = {
+    ctx: null,
+    ensure: function () {
+      if (this.ctx) return;
+      try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch (e) { this.ctx = null; }
+    },
+    // 双 Solfeggio 频率（528/963Hz），柔和淡入淡出
+    harmonics: function () {
+      this.ensure(); if (!this.ctx) return;
+      var t = this.ctx.currentTime, freqs = [528, 963], self = this;
+      freqs.forEach(function (f, i) {
+        var osc = self.ctx.createOscillator(), g = self.ctx.createGain();
+        osc.connect(g); g.connect(self.ctx.destination);
+        osc.frequency.setValueAtTime(f, t); osc.type = "sine";
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.1, t + 0.1);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 1.8 + i * 0.2);
+        osc.start(t); osc.stop(t + 2 + i * 0.2);
+      });
+    },
+    // 单击轻响
+    tick: function (freq) {
+      this.ensure(); if (!this.ctx) return;
+      var t = this.ctx.currentTime;
+      var osc = this.ctx.createOscillator(), g = this.ctx.createGain();
+      osc.connect(g); g.connect(this.ctx.destination);
+      osc.frequency.setValueAtTime(freq || 660, t); osc.type = "triangle";
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(0.08, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+      osc.start(t); osc.stop(t + 0.3);
+    }
+  };
+
+  /* ---------------------------------------------------------
+     全局状态
+     --------------------------------------------------------- */
+  var State = {
+    screen: "WELCOME",
+    prevScreen: "WELCOME",
+    area: "FOCUS",           // FOCUS | CALM | VITALITY | BOND
+    affirmation: "",         // 传给仪式引擎的意图语
+    context: {}              // 传给 LLM 的上下文
+  };
+
+  var AREAS = {
+    FOCUS:    { title: "Deep Focus",  sub: "ATTENTION & FLOW",   icon: "◎", accent: "#d4af37" },
+    CALM:     { title: "Calm",        sub: "SETTLE & SOFTEN",    icon: "❋", accent: "#d4af37" },
+    VITALITY: { title: "Vitality",    sub: "MOVE & AWAKEN",      icon: "✦", accent: "#d4af37" },
+    BOND:     { title: "Connection",  sub: "REACH & RELATE",     icon: "⬡", accent: "#d4af37" }
+  };
+
+  var stage = document.getElementById("ct-stage");
+
+  /* ---------------------------------------------------------
+     屏幕切换（状态机核心）—— 参照 breathe.html 的 .active 模式
+     --------------------------------------------------------- */
+  var screens = {}; // name -> element
+
+  function showScreen(name) {
+    State.prevScreen = State.screen;
+    State.screen = name;
+    Object.keys(screens).forEach(function (k) {
+      screens[k].classList.toggle("active", k === name);
+      if (k === name) screens[k].scrollTop = 0;
+    });
+    // 进入某些屏时触发其初始化钩子
+    if (name === "ALCHEMIZING") runAlchemizing();
+    if (name === "MANIFESTATION") initRitual();
+  }
+
+  // 小工具：创建元素
+  function el(tag, cls, html) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html != null) e.innerHTML = html;
+    return e;
+  }
+  function fmt(n) { return n.toLocaleString("en-US"); }
+
+  /* 共享的 ambient 背景层 */
+  function ambientHTML(withGeo) {
+    return '' +
+      '<div class="ct-ambient">' +
+        '<div class="glow"></div>' +
+        (withGeo ?
+          '<svg class="ct-geo-spin" viewBox="0 0 100 100" fill="none" stroke="#d4af37" stroke-width="0.08">' +
+            '<circle cx="50" cy="50" r="45"/><circle cx="50" cy="50" r="30" stroke-dasharray="1 1"/>' +
+            '<polygon points="50,5 93.3,30 93.3,80 50,105 6.7,80 6.7,30"/>' +
+            '<polygon points="50,105 93.3,80 93.3,30 50,5 6.7,30 6.7,80" stroke-dasharray="2 1"/>' +
+          '</svg>' : '') +
+      '</div>';
+  }
+
+  /* =========================================================
+     SCREEN 1 — WELCOME
+     ========================================================= */
+  function buildWelcome() {
+    var s = el("div", "ct-screen");
+    var sparks = "";
+    for (var i = 0; i < 22; i++) {
+      var a = Math.random() * 360, d = 140 + Math.random() * 80,
+          dur = 4.5 + Math.random() * 3, delay = Math.random() * -6,
+          sz = 1.5 + Math.random() * 2.5;
+      sparks += '<div class="ct-vortex-spark" style="--a:' + a + 'deg;--d:' + d + 'px;--dur:' + dur +
+                's;--delay:' + delay + 's;width:' + sz + 'px;height:' + sz + 'px;"></div>';
+    }
+    s.innerHTML =
+      ambientHTML(false) +
+      '<div class="ct-inner" style="justify-content:space-between;text-align:center;align-items:center;">' +
+        '<header style="margin-top:18px;">' +
+          '<div class="ct-eyebrow"><span class="dot"></span><span>Sovereign Portal</span></div>' +
+          '<h1 style="font-size:30px;font-weight:300;letter-spacing:0.28em;margin:16px 0 0;background:linear-gradient(to bottom,#fef08a,#f59e0b,#d97706);-webkit-background-clip:text;background-clip:text;color:transparent;text-transform:uppercase;">CITRINE369</h1>' +
+          '<p style="font-size:11px;line-height:1.7;max-width:280px;color:#a8a29e;font-weight:300;margin:14px auto 0;">A quiet space to set an intention, focus your attention, and mark the moment with a 3·6·9 ritual.</p>' +
+        '</header>' +
+        '<div style="flex:1;display:flex;align-items:center;justify-content:center;position:relative;width:100%;">' +
+          '<div style="position:absolute;width:300px;height:300px;display:flex;align-items:center;justify-content:center;pointer-events:none;">' + sparks + '</div>' +
+          '<svg class="ct-spin-slow" style="position:absolute;width:240px;height:240px;opacity:0.2;" viewBox="0 0 200 200" fill="none" stroke="#d4af37" stroke-width="0.5">' +
+            '<circle cx="100" cy="100" r="95" stroke-dasharray="3 3"/><circle cx="100" cy="100" r="75"/><circle cx="100" cy="100" r="55" stroke-dasharray="6 3"/><circle cx="100" cy="100" r="35"/>' +
+            '<polygon points="100,5 182.2,147.5 17.8,147.5"/><polygon points="100,195 182.2,52.5 17.8,52.5"/>' +
+          '</svg>' +
+          '<div class="ct-crystal"><div class="ct-crystal-core"></div></div>' +
+          '<div style="position:absolute;bottom:0;font-family:var(--mono);font-size:7px;color:rgba(212,175,55,0.6);letter-spacing:0.2em;text-transform:uppercase;">Centering Attention</div>' +
+        '</div>' +
+        '<div style="width:100%;max-width:340px;margin-bottom:16px;">' +
+          '<button class="ct-cta" id="ct-enter"><span>⚡</span><span>Enter The Ritual</span></button>' +
+          '<p class="ct-note">A moment for yourself · 369 protocol</p>' +
+        '</div>' +
+      '</div>';
+    s.querySelector("#ct-enter").addEventListener("click", function () {
+      Sound.harmonics();
+      showScreen("VAULT");
+    });
+    return s;
+  }
+
+  /* =========================================================
+     SCREEN 2 — VAULT (intention areas)
+     ========================================================= */
+  function buildVault() {
+    var s = el("div", "ct-screen");
+    var cards = "";
+    Object.keys(AREAS).forEach(function (key) {
+      var a = AREAS[key];
+      cards +=
+        '<button class="ct-cat" data-area="' + key + '">' +
+          '<div class="ct-cat-icon">' + a.icon + '</div>' +
+          '<div class="ct-cat-title">' + a.title + '</div>' +
+          '<div class="ct-cat-sub">' + a.sub + '</div>' +
+          '<div class="ct-cat-arrow">›</div>' +
+        '</button>';
+    });
+    s.innerHTML =
+      ambientHTML(false) +
+      '<div class="ct-inner" style="justify-content:space-between;">' +
+        '<div>' +
+          '<header style="text-align:center;margin:6px 0 28px;position:relative;">' +
+            '<button class="ct-back" id="ct-vault-back" style="position:absolute;left:0;top:0;">‹</button>' +
+            '<div class="ct-eyebrow"><span class="dot"></span><span>Sovereign Portal</span></div>' +
+            '<h2 style="font-size:18px;font-weight:300;letter-spacing:0.22em;margin-top:12px;text-transform:uppercase;color:var(--c-ink);">CITRINE 369</h2>' +
+            '<div style="font-family:var(--mono);font-size:10px;letter-spacing:0.3em;color:var(--c-gold);text-transform:uppercase;margin-top:3px;">INTENTION GRID</div>' +
+          '</header>' +
+          '<div style="font-family:var(--mono);font-size:10px;letter-spacing:0.15em;color:var(--c-ink-faint);text-transform:uppercase;text-align:center;margin-bottom:14px;">Choose your focus</div>' +
+          '<div class="ct-grid">' + cards + '</div>' +
+        '</div>' +
+        '<div style="margin-top:24px;padding-top:14px;border-top:1px solid rgba(212,175,55,0.1);display:flex;justify-content:flex-end;font-family:var(--mono);font-size:8px;color:#5c564c;text-transform:uppercase;letter-spacing:0.2em;">Ritual Ready</div>' +
+      '</div>';
+    s.querySelector("#ct-vault-back").addEventListener("click", function () { showScreen("WELCOME"); });
+    s.querySelectorAll(".ct-cat").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        Sound.tick(720);
+        State.area = btn.getAttribute("data-area");
+        var map = { FOCUS: "CASH_FLOW", CALM: "STOCKS_CRYPTO", VITALITY: "REAL_ESTATE", BOND: "FORBES_CLUB" };
+        showScreen(map[State.area]);
+      });
+    });
+    return s;
+  }
+
+  /* =========================================================
+     SCREEN 3 — FOCUS DIAL (was Cash Flow)
+     圆盘拖拽 + SVG 上升曲线，语义换成"专注时长"
+     ========================================================= */
+  function buildFocusDial() {
+    var s = el("div", "ct-screen");
+    var PRESETS = [
+      { value: 10, label: "10 min" },
+      { value: 25, label: "25 min" },
+      { value: 45, label: "45 min" },
+      { value: 60, label: "60 min" },
+      { value: 90, label: "90 min" }
+    ];
+    var minutes = 25, rotation = 90;
+
+    s.innerHTML =
+      ambientHTML(true) +
+      '<div class="ct-inner" style="justify-content:space-between;">' +
+        '<div>' +
+          '<div class="ct-head">' +
+            '<button class="ct-back" data-back>‹</button>' +
+            '<div style="text-align:right;">' +
+              '<div class="ct-eyebrow"><span class="dot"></span><span>Focus Mode</span></div>' +
+              '<div class="ct-head-title">DEEP FOCUS SESSION</div>' +
+            '</div>' +
+          '</div>' +
+          '<section class="ct-glass" style="margin-bottom:18px;">' +
+            '<span class="ct-corner tl"></span><span class="ct-corner tr"></span><span class="ct-corner bl"></span><span class="ct-corner br"></span>' +
+            '<div style="text-align:center;font-weight:300;font-size:14px;line-height:1.6;color:var(--c-ink);padding:6px 0 4px;">' +
+              'I give my focus for <span class="ct-chip" id="fd-chip">25 min</span>' +
+            '</div>' +
+            '<div style="display:flex;justify-content:center;padding:22px 0 6px;">' +
+              '<div class="ct-dial" id="fd-dial">' +
+                '<svg class="ct-dial-svg" viewBox="0 0 100 100">' +
+                  '<circle cx="50" cy="50" r="43" fill="none" stroke="#1a1610" stroke-width="2.5"/>' +
+                  '<circle cx="50" cy="50" r="43" fill="none" stroke="#d4af37" stroke-width="1.5" stroke-dasharray="270 360" opacity="0.25"/>' +
+                  '<circle id="fd-arc" cx="50" cy="50" r="43" fill="none" stroke="#facc15" stroke-width="2" stroke-dasharray="67 360" opacity="0.7"/>' +
+                '</svg>' +
+                '<div class="ct-dial-knob" id="fd-knob"><div class="nub"></div></div>' +
+                '<div class="ct-dial-center"><span class="lbl">Duration</span><div class="val" id="fd-val">25</div><span class="unit">minutes</span></div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="ct-presets" id="fd-presets"></div>' +
+          '</section>' +
+          '<section style="border:1px solid rgba(255,255,255,0.05);background:rgba(9,8,8,0.85);border-radius:16px;padding:14px;">' +
+            '<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;"><span style="color:var(--c-gold);">↗</span><span style="font-family:var(--mono);font-size:10px;letter-spacing:0.15em;color:var(--c-ink-dim);text-transform:uppercase;">Focus build-up</span></div>' +
+            '<div style="position:relative;width:100%;height:120px;">' +
+              '<svg style="width:100%;height:100%;" viewBox="0 0 320 120" preserveAspectRatio="none">' +
+                '<defs><filter id="fd-glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="3" result="b"/><feComposite in="SourceGraphic" in2="b" operator="over"/></filter>' +
+                '<linearGradient id="fd-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ca8a04" stop-opacity="0.25"/><stop offset="100%" stop-color="#050505" stop-opacity="0"/></linearGradient></defs>' +
+                '<line x1="20" y1="20" x2="300" y2="20" stroke="#1c1610" stroke-width="0.5" stroke-dasharray="3 3"/>' +
+                '<line x1="20" y1="65" x2="300" y2="65" stroke="#1c1610" stroke-width="0.5" stroke-dasharray="3 3"/>' +
+                '<line x1="20" y1="110" x2="300" y2="110" stroke="#1c1610" stroke-width="0.5"/>' +
+                '<path id="fd-area" fill="url(#fd-fill)" d=""/>' +
+                '<path id="fd-line" fill="none" stroke="#d4af37" stroke-width="2" filter="url(#fd-glow)" d=""/>' +
+                '<circle id="fd-node" r="4" fill="#ffdf7a"/>' +
+              '</svg>' +
+              '<div style="position:absolute;top:6px;left:14px;display:flex;flex-direction:column;pointer-events:none;"><span style="font-family:var(--mono);font-size:7px;color:#5c564c;letter-spacing:0.15em;text-transform:uppercase;">SESSIONS / WEEK</span><span id="fd-weekly" style="font-family:var(--mono);font-size:13px;font-weight:600;color:var(--c-ink);">—</span></div>' +
+              '<div style="position:absolute;top:6px;right:14px;display:flex;flex-direction:column;text-align:right;pointer-events:none;"><span style="font-family:var(--mono);font-size:7px;color:#5c564c;letter-spacing:0.15em;text-transform:uppercase;">MINUTES / WEEK</span><span id="fd-weekmin" style="font-family:var(--mono);font-size:13px;font-weight:600;color:#facc15;">—</span></div>' +
+            '</div>' +
+            '<div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:8px;color:#5c564c;text-transform:uppercase;letter-spacing:0.15em;margin-top:8px;border-top:1px solid rgba(255,255,255,0.05);padding-top:8px;"><span>Begin</span><span>Sustain</span><span>Flow</span></div>' +
+          '</section>' +
+        '</div>' +
+        '<div style="padding-top:18px;"><button class="ct-cta solid" data-lock><span>⚡</span><span>Lock This Intention</span></button></div>' +
+      '</div>';
+
+    // --- dial logic ---
+    var dial = s.querySelector("#fd-dial"), knob = s.querySelector("#fd-knob"),
+        arc = s.querySelector("#fd-arc"), valEl = s.querySelector("#fd-val"),
+        chip = s.querySelector("#fd-chip");
+    var dragging = false;
+
+    function mapAngleToMinutes(angle) {
+      var raw = Math.round(5 + (angle / 360) * 115); // 5..120
+      for (var i = 0; i < PRESETS.length; i++) {
+        if (Math.abs(raw - PRESETS[i].value) < 6) return PRESETS[i].value;
+      }
+      return raw;
+    }
+    function renderChart() {
+      var steps = 7, pts = [];
+      for (var i = 0; i <= steps; i++) {
+        var x = (i / steps) * 280 + 20;
+        var ratio = i / steps;
+        var y = 110 - Math.pow(ratio, 1.6) * 88 - Math.sin(i) * 2;
+        pts.push([x, y]);
+      }
+      var path = pts.map(function (p, i) { return (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" ");
+      s.querySelector("#fd-line").setAttribute("d", path);
+      s.querySelector("#fd-area").setAttribute("d", path + " L300 115 L20 115 Z");
+      var last = pts[pts.length - 1];
+      var node = s.querySelector("#fd-node");
+      node.setAttribute("cx", last[0]); node.setAttribute("cy", last[1]);
+    }
+    function update() {
+      valEl.textContent = minutes;
+      chip.textContent = minutes + " min";
+      knob.style.transform = "rotate(" + rotation + "deg)";
+      arc.setAttribute("stroke-dasharray", ((rotation / 360) * 270).toFixed(0) + " 360");
+      s.querySelector("#fd-weekly").textContent = "5";
+      s.querySelector("#fd-weekmin").textContent = fmt(minutes * 5);
+      renderChart();
+    }
+    function pointerAngle(cx, cy, px, py) {
+      var a = Math.atan2(py - cy, px - cx) * 180 / Math.PI;
+      if (a < 0) a += 360;
+      return a;
+    }
+    function handleMove(px, py) {
+      var r = dial.getBoundingClientRect();
+      rotation = pointerAngle(r.left + r.width / 2, r.top + r.height / 2, px, py);
+      minutes = mapAngleToMinutes(rotation);
+      update();
+    }
+    dial.addEventListener("mousedown", function (e) { dragging = true; handleMove(e.clientX, e.clientY); });
+    window.addEventListener("mousemove", function (e) { if (dragging) handleMove(e.clientX, e.clientY); });
+    window.addEventListener("mouseup", function () { dragging = false; });
+    dial.addEventListener("touchstart", function (e) { dragging = true; var t = e.touches[0]; handleMove(t.clientX, t.clientY); }, { passive: true });
+    dial.addEventListener("touchmove", function (e) { if (!dragging) return; var t = e.touches[0]; handleMove(t.clientX, t.clientY); e.preventDefault(); }, { passive: false });
+    dial.addEventListener("touchend", function () { dragging = false; });
+
+    // presets
+    var pc = s.querySelector("#fd-presets");
+    PRESETS.forEach(function (p, idx) {
+      var b = el("button", "ct-preset", p.label);
+      b.addEventListener("click", function () {
+        minutes = p.value;
+        rotation = (idx / PRESETS.length) * 270 + 30;
+        Sound.tick(600 + idx * 40);
+        pc.querySelectorAll(".ct-preset").forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        update();
+      });
+      pc.appendChild(b);
+    });
+
+    s.querySelector("[data-back]").addEventListener("click", function () { showScreen("VAULT"); });
+    s.querySelector("[data-lock]").addEventListener("click", function () {
+      Sound.tick(880);
+      State.affirmation = "I give my focus for " + minutes + " minutes.";
+      State.context = { area: "FOCUS", detail: "deep focus", value: minutes + " minutes" };
+      showScreen("ALCHEMIZING");
+    });
+
+    update();
+    return s;
+  }
+
+  /* 通用粒子系统（供 CALM/VITALITY/BOND 复用） */
+  function makeParticleField(host) {
+    var particles = [], id = 0, raf = null;
+    function spawn(count, opts) {
+      opts = opts || {};
+      for (var i = 0; i < count; i++) {
+        particles.push({
+          id: id++,
+          x: (opts.cx != null ? opts.cx : 50) + (Math.random() - 0.5) * (opts.spread || 40),
+          y: (opts.cy != null ? opts.cy : 50) + (Math.random() - 0.5) * (opts.spread || 30),
+          vx: (Math.random() - 0.5) * (opts.vx || 3),
+          vy: (opts.vy != null ? opts.vy : -(0.5 + Math.random() * 1.5)),
+          life: 1,
+          size: 2 + Math.random() * 4,
+          glyph: opts.glyphs ? opts.glyphs[Math.floor(Math.random() * opts.glyphs.length)] : null
+        });
+      }
+      if (particles.length > 60) particles = particles.slice(-60);
+      if (!raf) tick();
+    }
+    function tick() {
+      particles = particles.filter(function (p) { return p.life > 0; });
+      particles.forEach(function (p) {
+        p.x += p.vx * 0.4; p.y += p.vy; p.life -= 0.02;
+      });
+      render();
+      raf = particles.length ? requestAnimationFrame(tick) : null;
+    }
+    function render() {
+      host.innerHTML = particles.map(function (p) {
+        var common = "left:" + p.x + "%;top:" + p.y + "%;opacity:" + Math.max(0, p.life).toFixed(2) + ";";
+        if (p.glyph) {
+          return '<div class="ct-particle" style="' + common + 'font-family:var(--mono);font-size:' + (10 + p.size) + 'px;color:#facc15;text-shadow:0 0 6px #facc15;transform:scale(' + p.life.toFixed(2) + ');">' + p.glyph + '</div>';
+        }
+        return '<div class="ct-particle" style="' + common + 'width:' + p.size + 'px;height:' + p.size + 'px;border-radius:50%;background:#facc15;box-shadow:0 0 8px #eab308;"></div>';
+      }).join("");
+    }
+    return { spawn: spawn };
+  }
+
+  /* =========================================================
+     SCREEN 4 — CALM (was Stocks/Crypto)
+     分段切换 + 粒子喷射，语义换成"平静练习"
+     ========================================================= */
+  function buildCalm() {
+    var s = el("div", "ct-screen");
+    var mode = "breath"; // breath | stillness
+    var breathRounds = "6", stillMinutes = "5";
+
+    s.innerHTML =
+      ambientHTML(true) +
+      '<div class="ct-inner" style="justify-content:space-between;">' +
+        '<div>' +
+          '<div class="ct-head">' +
+            '<button class="ct-back" data-back>‹</button>' +
+            '<div style="text-align:right;"><div class="ct-eyebrow"><span class="dot"></span><span>Calm Mode</span></div><div class="ct-head-title">SETTLE &amp; SOFTEN</div></div>' +
+          '</div>' +
+          '<div class="ct-seg" id="calm-seg">' +
+            '<button data-m="breath" class="on">❋ BREATH CYCLES</button>' +
+            '<button data-m="stillness">☾ STILLNESS</button>' +
+          '</div>' +
+          '<section class="ct-glass" style="min-height:180px;display:flex;flex-direction:column;justify-content:center;margin-bottom:18px;">' +
+            '<span class="ct-corner tl"></span><span class="ct-corner tr"></span><span class="ct-corner bl"></span><span class="ct-corner br"></span>' +
+            '<div class="ct-particles" id="calm-particles"></div>' +
+            '<div id="calm-body" style="position:relative;z-index:10;text-align:center;font-weight:300;font-size:15px;line-height:1.9;color:var(--c-ink);"></div>' +
+          '</section>' +
+        '</div>' +
+        '<div style="padding-top:6px;"><button class="ct-cta solid" data-lock><span>❋</span><span>Lock This Intention</span></button></div>' +
+      '</div>';
+
+    var pf = makeParticleField(s.querySelector("#calm-particles"));
+    var body = s.querySelector("#calm-body");
+
+    function renderBody() {
+      if (mode === "breath") {
+        body.innerHTML =
+          'I will breathe, slowly, for ' +
+          '<input class="ct-input" id="calm-rounds" style="width:64px;" value="' + breathRounds + '" maxlength="3" inputmode="numeric"> ' +
+          '<span style="color:var(--c-gold-bright);font-family:var(--mono);">rounds</span>' +
+          '<div style="font-family:var(--mono);font-size:9px;color:var(--c-ink-dim);letter-spacing:0.15em;text-transform:uppercase;margin-top:14px;">≈ ' +
+          ((parseInt(breathRounds, 10) || 0) * 6) + ' seconds of slow breathing</div>';
+        var inp = s.querySelector("#calm-rounds");
+        inp.addEventListener("input", function () { breathRounds = inp.value.replace(/[^0-9]/g, ""); pf.spawn(3, { glyphs: ["❋", "·", "○"] }); renderBody(); requestAnimationFrame(function(){ s.querySelector("#calm-rounds").focus(); }); });
+      } else {
+        body.innerHTML =
+          'I will sit in stillness for ' +
+          '<input class="ct-input" id="calm-still" style="width:64px;" value="' + stillMinutes + '" maxlength="3" inputmode="numeric"> ' +
+          '<span style="color:var(--c-gold-bright);font-family:var(--mono);">min</span>' +
+          '<div style="font-family:var(--mono);font-size:9px;color:var(--c-ink-dim);letter-spacing:0.15em;text-transform:uppercase;margin-top:14px;">Nothing to do · just be here</div>';
+        var inp2 = s.querySelector("#calm-still");
+        inp2.addEventListener("input", function () { stillMinutes = inp2.value.replace(/[^0-9]/g, ""); pf.spawn(3, { glyphs: ["☾", "·", "○"] }); renderBody(); requestAnimationFrame(function(){ s.querySelector("#calm-still").focus(); }); });
+      }
+    }
+    renderBody();
+
+    s.querySelectorAll("#calm-seg button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        mode = b.getAttribute("data-m");
+        s.querySelectorAll("#calm-seg button").forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        Sound.tick(mode === "breath" ? 640 : 520);
+        pf.spawn(12, { glyphs: ["❋", "☾", "·", "○"] });
+        renderBody();
+      });
+    });
+
+    s.querySelector("[data-back]").addEventListener("click", function () { showScreen("VAULT"); });
+    s.querySelector("[data-lock]").addEventListener("click", function () {
+      pf.spawn(24, { glyphs: ["❋", "☾", "·", "○"] });
+      Sound.tick(700);
+      if (mode === "breath") {
+        State.affirmation = "I will breathe slowly for " + breathRounds + " rounds.";
+        State.context = { area: "CALM", detail: "slow breathing", value: breathRounds + " rounds" };
+      } else {
+        State.affirmation = "I will sit in stillness for " + stillMinutes + " minutes.";
+        State.context = { area: "CALM", detail: "stillness", value: stillMinutes + " minutes" };
+      }
+      setTimeout(function () { showScreen("ALCHEMIZING"); }, 260);
+    });
+    return s;
+  }
+
+  /* =========================================================
+     SCREEN 5 — VITALITY (was Real Estate)
+     水平选项卡 + 输入框 + 上升粒子
+     ========================================================= */
+  function buildVitality() {
+    var s = el("div", "ct-screen");
+    var actType = "Movement", duration = "20 min", place = "the park";
+
+    s.innerHTML =
+      ambientHTML(false) +
+      '<div class="ct-ambient" style="opacity:0.06;">' +
+        '<svg width="100%" height="100%" style="position:absolute;inset:0;"><defs><pattern id="vit-grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0 L0 0 0 30" fill="none" stroke="#d4af37" stroke-width="0.15"/></pattern></defs><rect width="100%" height="100%" fill="url(#vit-grid)"/></svg>' +
+      '</div>' +
+      '<div class="ct-inner" style="justify-content:space-between;">' +
+        '<div>' +
+          '<div class="ct-head">' +
+            '<button class="ct-back" data-back>‹</button>' +
+            '<div style="text-align:right;"><div class="ct-eyebrow"><span class="dot"></span><span>Vitality</span></div><div class="ct-head-title">MOVE &amp; AWAKEN</div></div>' +
+          '</div>' +
+          '<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:20px;"><span style="color:var(--c-gold);" class="ct-spin-slow">✦</span><span style="font-family:var(--mono);font-size:9px;letter-spacing:0.3em;color:var(--c-gold);text-transform:uppercase;">Body Intention</span></div>' +
+          '<section class="ct-glass" style="min-height:220px;display:flex;flex-direction:column;justify-content:center;">' +
+            '<span class="ct-corner tl"></span><span class="ct-corner tr"></span><span class="ct-corner bl"></span><span class="ct-corner br"></span>' +
+            '<div class="ct-particles" id="vit-particles"></div>' +
+            '<div style="position:relative;z-index:10;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px;">' +
+              '<div style="font-size:15px;color:#d6d3d1;font-weight:300;">I will make space for</div>' +
+              '<div class="ct-tabs" id="vit-tabs">' +
+                '<button class="ct-tab on" data-t="Movement">Movement</button>' +
+                '<button class="ct-tab" data-t="Stretch">Stretch</button>' +
+                '<button class="ct-tab" data-t="A Walk">A Walk</button>' +
+              '</div>' +
+              '<div style="font-size:15px;color:#d6d3d1;font-weight:300;">for</div>' +
+              '<input class="ct-input" id="vit-dur" style="width:100%;max-width:220px;" value="20 min">' +
+              '<div style="font-size:15px;color:#d6d3d1;font-weight:300;">at</div>' +
+              '<input class="ct-input" id="vit-place" style="width:100%;max-width:220px;font-weight:600;" value="the park">' +
+            '</div>' +
+          '</section>' +
+        '</div>' +
+        '<div style="padding-top:16px;"><button class="ct-cta solid" data-lock><span>✦</span><span>Lock This Intention</span></button></div>' +
+      '</div>';
+
+    var pf = makeParticleField(s.querySelector("#vit-particles"));
+    pf.spawn(8, {});
+
+    s.querySelectorAll("#vit-tabs .ct-tab").forEach(function (t) {
+      t.addEventListener("click", function () {
+        actType = t.getAttribute("data-t");
+        s.querySelectorAll("#vit-tabs .ct-tab").forEach(function (x) { x.classList.remove("on"); });
+        t.classList.add("on");
+        Sound.tick(680);
+        pf.spawn(10, {});
+      });
+    });
+    var durIn = s.querySelector("#vit-dur"), placeIn = s.querySelector("#vit-place");
+    durIn.addEventListener("input", function () { duration = durIn.value; pf.spawn(3, {}); });
+    placeIn.addEventListener("input", function () { place = placeIn.value; pf.spawn(3, {}); });
+
+    s.querySelector("[data-back]").addEventListener("click", function () { showScreen("VAULT"); });
+    s.querySelector("[data-lock]").addEventListener("click", function () {
+      pf.spawn(25, {});
+      Sound.tick(760);
+      State.affirmation = "I will make space for " + actType.toLowerCase() + " for " + duration + " at " + place + ".";
+      State.context = { area: "VITALITY", detail: actType.toLowerCase(), value: duration };
+      setTimeout(function () { showScreen("ALCHEMIZING"); }, 240);
+    });
+    return s;
+  }
+
+  /* =========================================================
+     SCREEN 6 — BOND (was Forbes Club)
+     表单 + 实时共鸣句（不对标真人，改成反思式回应）
+     ========================================================= */
+  function buildBond() {
+    var s = el("div", "ct-screen");
+    var who = "someone I've drifted from", gesture = "1", note = "just to say I'm thinking of them";
+
+    var GESTURES = {
+      "1": "send a short message",
+      "2": "make a call",
+      "3": "plan to meet in person",
+      "4": "write them something longer",
+      "5": "simply hold them in mind today"
+    };
+
+    s.innerHTML =
+      ambientHTML(true) +
+      '<div class="ct-inner" style="justify-content:space-between;">' +
+        '<div>' +
+          '<div class="ct-head">' +
+            '<button class="ct-back" data-back>‹</button>' +
+            '<div style="text-align:right;"><div class="ct-eyebrow"><span class="dot"></span><span>Connection</span></div><div class="ct-head-title">REACH &amp; RELATE</div></div>' +
+          '</div>' +
+          '<section class="ct-glass" style="display:flex;flex-direction:column;gap:16px;">' +
+            '<span class="ct-corner tl"></span><span class="ct-corner tr"></span><span class="ct-corner bl"></span><span class="ct-corner br"></span>' +
+            '<div style="display:flex;flex-direction:column;gap:6px;">' +
+              '<label style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;color:var(--c-ink-faint);text-transform:uppercase;">Who comes to mind</label>' +
+              '<input class="ct-input" id="bond-who" style="width:100%;text-align:left;font-weight:500;" value="' + who + '">' +
+            '</div>' +
+            '<div style="display:flex;flex-direction:column;gap:6px;">' +
+              '<label style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;color:var(--c-ink-faint);text-transform:uppercase;">How I will reach out — No. [ <input id="bond-rank" value="1" maxlength="1" inputmode="numeric" style="width:26px;background:transparent;border:none;border-bottom:1px solid var(--c-gold);color:var(--c-gold-bright);text-align:center;font-family:var(--mono);outline:none;"> ]</label>' +
+              '<div id="bond-gesture" style="font-family:var(--mono);font-size:12px;color:var(--c-gold-bright);padding:6px 0;">→ send a short message</div>' +
+            '</div>' +
+            '<div style="display:flex;flex-direction:column;gap:6px;">' +
+              '<label style="font-family:var(--mono);font-size:9px;letter-spacing:0.15em;color:var(--c-ink-faint);text-transform:uppercase;">Because</label>' +
+              '<input class="ct-input" id="bond-note" style="width:100%;text-align:left;font-weight:400;" value="' + note + '">' +
+            '</div>' +
+            '<div id="bond-echo" style="border-top:1px solid rgba(212,175,55,0.15);padding-top:12px;font-size:12px;font-style:italic;font-weight:300;color:var(--c-ink-dim);line-height:1.6;text-align:center;"></div>' +
+          '</section>' +
+        '</div>' +
+        '<div style="padding-top:16px;"><button class="ct-cta solid" data-lock><span>⬡</span><span>Lock This Intention</span></button></div>' +
+      '</div>';
+
+    var whoIn = s.querySelector("#bond-who"), rankIn = s.querySelector("#bond-rank"),
+        noteIn = s.querySelector("#bond-note"), gestureEl = s.querySelector("#bond-gesture"),
+        echoEl = s.querySelector("#bond-echo");
+
+    function renderEcho() {
+      gesture = GESTURES[rankIn.value] ? rankIn.value : "5";
+      gestureEl.textContent = "→ " + GESTURES[gesture];
+      echoEl.textContent = "A small step toward " + (whoIn.value || "someone who matters") + " — " + GESTURES[gesture] + ".";
+    }
+    whoIn.addEventListener("input", renderEcho);
+    noteIn.addEventListener("input", renderEcho);
+    rankIn.addEventListener("input", function () { rankIn.value = rankIn.value.replace(/[^1-5]/g, ""); Sound.tick(600); renderEcho(); });
+    renderEcho();
+
+    s.querySelector("[data-back]").addEventListener("click", function () { showScreen("VAULT"); });
+    s.querySelector("[data-lock]").addEventListener("click", function () {
+      Sound.tick(720);
+      State.affirmation = "I will reach toward " + (whoIn.value || "someone who matters") + " — " + GESTURES[gesture] + ".";
+      State.context = { area: "BOND", detail: whoIn.value || "someone who matters", value: GESTURES[gesture] };
+      showScreen("ALCHEMIZING");
+    });
+    return s;
+  }
+
+  /* =========================================================
+     SCREEN 7 — ALCHEMIZING (transition + LLM call)
+     调 generateIntentionLine() 生成个性化意图语
+     ========================================================= */
+  var alchemyRunning = false;
+  function buildAlchemizing() {
+    var s = el("div", "ct-screen");
+    s.innerHTML =
+      ambientHTML(true) +
+      '<div class="ct-inner" style="justify-content:center;align-items:center;text-align:center;gap:24px;">' +
+        '<div class="ct-alch-core">' +
+          '<div class="ct-alch-swirl"></div>' +
+          '<svg class="ct-spin-slow" style="position:absolute;width:150px;height:150px;opacity:0.3;" viewBox="0 0 100 100" fill="none" stroke="#d4af37" stroke-width="0.4"><circle cx="50" cy="50" r="45"/><polygon points="50,5 93.3,30 93.3,80 50,105 6.7,80 6.7,30"/></svg>' +
+          '<div class="ct-crystal" style="width:90px;height:90px;"><div class="ct-crystal-core"></div></div>' +
+        '</div>' +
+        '<div>' +
+          '<div style="font-family:var(--mono);font-size:13px;letter-spacing:0.15em;color:var(--c-gold-bright);text-transform:uppercase;" id="alch-status">Shaping your intention…</div>' +
+          '<div style="font-size:11px;color:var(--c-ink-dim);font-style:italic;margin-top:10px;max-width:260px;line-height:1.6;" id="alch-sub">Turning your words into a line to sit with.</div>' +
+        '</div>' +
+        '<div class="ct-spinner" id="alch-spin"></div>' +
+      '</div>';
+    return s;
+  }
+
+  function runAlchemizing() {
+    if (alchemyRunning) return;
+    alchemyRunning = true;
+    var scr = screens.ALCHEMIZING;
+    var statusEl = scr.querySelector("#alch-status");
+    var subEl = scr.querySelector("#alch-sub");
+    var spin = scr.querySelector("#alch-spin");
+
+    var minWait = new Promise(function (res) { setTimeout(res, 2600); });
+    var llm = generateIntentionLine(State.context);
+
+    Promise.all([llm, minWait]).then(function (arr) {
+      var line = arr[0];
+      // 把 LLM/兜底生成的意图语交给仪式引擎展示
+      State.affirmation = line || State.affirmation;
+      statusEl.textContent = "Intention set";
+      subEl.textContent = "";
+      if (spin) spin.style.display = "none";
+      setTimeout(function () {
+        alchemyRunning = false;
+        showScreen("MANIFESTATION");
+      }, 500);
+    });
+  }
+
+  /* =========================================================
+     SCREEN 8 — MANIFESTATION (3-6-9 ritual engine + poster)
+     ========================================================= */
+  var Ritual = null;
+  function buildManifestation() {
+    var s = el("div", "ct-screen");
+    s.innerHTML =
+      ambientHTML(true) +
+      '<div class="ct-flash" id="mf-flash"></div>' +
+      '<div class="ct-debug" id="mf-debug">bypass</div>' +
+      '<div class="ct-inner" style="justify-content:space-between;">' +
+        '<div>' +
+          '<div class="ct-head" style="margin-bottom:14px;">' +
+            '<button class="ct-back" data-back>‹</button>' +
+            '<div style="text-align:right;"><div class="ct-eyebrow"><span class="dot"></span><span>369 Ritual</span></div><div class="ct-head-title">INTENTION LOCK</div></div>' +
+          '</div>' +
+          '<section class="ct-glass" style="text-align:center;margin-bottom:16px;padding:16px;">' +
+            '<span class="ct-corner tl"></span><span class="ct-corner tr"></span><span class="ct-corner bl"></span><span class="ct-corner br"></span>' +
+            '<div style="font-family:var(--mono);font-size:8px;letter-spacing:0.2em;color:var(--c-ink-faint);text-transform:uppercase;margin-bottom:8px;">Your Intention</div>' +
+            '<div id="mf-affirm" style="font-size:14px;font-weight:300;font-style:italic;line-height:1.6;color:var(--c-ink);"></div>' +
+          '</section>' +
+          '<div class="ct-phase-dots" id="mf-phases">' +
+            '<div class="ct-phase-dot" data-p="0"><div class="ring">3</div><span>Initiate</span></div>' +
+            '<div class="ct-phase-dot" data-p="1"><div class="ring">6</div><span>Affirm</span></div>' +
+            '<div class="ct-phase-dot" data-p="2"><div class="ring">9</div><span>Seal</span></div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding-bottom:8px;">' +
+          '<button class="ct-orb-btn" id="mf-orb"><span class="ct-orb-count" id="mf-count">0</span><span id="mf-orb-label" style="font-family:var(--mono);font-size:9px;letter-spacing:0.1em;margin-top:2px;">TAP 3×</span></button>' +
+          '<div id="mf-cooldown" style="font-family:var(--mono);font-size:10px;letter-spacing:0.1em;color:var(--c-ink-faint);text-transform:uppercase;min-height:14px;"></div>' +
+        '</div>' +
+      '</div>' +
+      // poster modal
+      '<div class="ct-modal" id="mf-modal">' +
+        '<div class="ct-poster" id="mf-poster">' +
+          '<div style="font-family:var(--mono);font-size:8px;letter-spacing:0.3em;color:var(--c-gold);text-transform:uppercase;">CITRINE 369</div>' +
+          '<div style="margin:18px auto;width:90px;height:90px;border-radius:50%;border:2px solid var(--c-gold);display:flex;align-items:center;justify-content:center;box-shadow:0 0 30px rgba(212,175,55,0.4);"><div style="width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 40% 30%,#ffe9a8,#d4af37 45%,#7a5a12 80%);"></div></div>' +
+          '<div style="font-size:8px;font-family:var(--mono);letter-spacing:0.2em;color:var(--c-ink-faint);text-transform:uppercase;">Intention Sealed</div>' +
+          '<div id="mf-poster-text" style="font-size:14px;font-weight:300;font-style:italic;line-height:1.6;color:var(--c-ink);margin:12px 0 18px;"></div>' +
+          '<div style="font-family:var(--mono);font-size:7px;letter-spacing:0.15em;color:#5c564c;text-transform:uppercase;border-top:1px solid rgba(212,175,55,0.15);padding-top:12px;">A moment marked · <span id="mf-poster-date"></span></div>' +
+          '<div style="display:flex;gap:8px;margin-top:18px;">' +
+            '<button class="ct-cta solid" id="mf-save" style="font-size:9px;padding:11px;">Save</button>' +
+            '<button class="ct-cta" id="mf-share" style="font-size:9px;padding:11px;">Share</button>' +
+          '</div>' +
+          '<button id="mf-home" style="margin-top:12px;width:100%;background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--c-ink-faint);font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:10px;border-radius:12px;cursor:pointer;">Back to start</button>' +
+        '</div>' +
+      '</div>';
+    return s;
+  }
+
+  function initRitual() {
+    var scr = screens.MANIFESTATION;
+    scr.querySelector("#mf-affirm").textContent = State.affirmation || "I am here, on purpose.";
+
+    // 3-6-9 阶段配置：目标点击数 + 飘散词 + 冷却(相对时间，演示用秒级)
+    var PHASES = [
+      { target: 3, words: ["Intention seeded…", "Attention gathering…"], cooldown: 0 },
+      { target: 6, words: ["Settling in…", "Returning to it…"], cooldown: 6 },
+      { target: 9, words: ["Taking root…", "Becoming real…"], cooldown: 9 }
+    ];
+    var phase = 0, count = 0, locked = false, cooldownTimer = null;
+
+    var orb = scr.querySelector("#mf-orb"),
+        countEl = scr.querySelector("#mf-count"),
+        orbLabel = scr.querySelector("#mf-orb-label"),
+        cdEl = scr.querySelector("#mf-cooldown"),
+        phaseDots = scr.querySelectorAll("#mf-phases .ct-phase-dot");
+
+    function renderPhases() {
+      phaseDots.forEach(function (d, i) {
+        d.classList.toggle("on", i === phase);
+        d.classList.toggle("done", i < phase);
+      });
+      orbLabel.textContent = "TAP " + PHASES[phase].target + "×";
+    }
+
+    function floatWord() {
+      var words = PHASES[phase].words;
+      var w = el("div", "ct-float-word", words[count % words.length]);
+      scr.querySelector(".ct-inner").appendChild(w);
+      setTimeout(function () { w.remove(); }, 2000);
+    }
+
+    function startCooldown(seconds, onDone) {
+      locked = true; orb.disabled = true;
+      var remain = seconds;
+      cdEl.textContent = "Cooldown · " + remain + "s";
+      cooldownTimer = setInterval(function () {
+        remain--;
+        if (remain <= 0) {
+          clearInterval(cooldownTimer);
+          cdEl.textContent = "";
+          locked = false; orb.disabled = false;
+          onDone();
+        } else {
+          cdEl.textContent = "Cooldown · " + remain + "s";
+        }
+      }, 1000);
+    }
+
+    function completeRitual() {
+      // 全屏金光 + 海报
+      var flash = scr.querySelector("#mf-flash");
+      flash.classList.add("go");
+      Sound.harmonics();
+      var big = el("div", "ct-float-word", "It is set.");
+      big.style.fontSize = "22px"; big.style.top = "45%";
+      scr.querySelector(".ct-inner").appendChild(big);
+      setTimeout(function () { big.remove(); openPoster(); }, 1400);
+    }
+
+    function openPoster() {
+      var modal = scr.querySelector("#mf-modal");
+      scr.querySelector("#mf-poster-text").textContent = State.affirmation;
+      scr.querySelector("#mf-poster-date").textContent = new Date().toLocaleDateString();
+      modal.classList.add("open");
+    }
+
+    function advance() {
+      if (phase < PHASES.length - 1) {
+        phase++;
+        count = 0; countEl.textContent = "0";
+        renderPhases();
+        startCooldown(PHASES[phase].cooldown, function () {});
+      } else {
+        completeRitual();
+      }
+    }
+
+    function tap() {
+      if (locked) return;
+      count++;
+      countEl.textContent = count;
+      Sound.tick(520 + phase * 120 + count * 20);
+      floatWord();
+      if (count >= PHASES[phase].target) {
+        if (phase < PHASES.length - 1) {
+          setTimeout(advance, 500);
+        } else {
+          setTimeout(completeRitual, 400);
+        }
+      }
+    }
+
+    orb.onclick = tap;
+
+    // debug: bypass locks
+    scr.querySelector("#mf-debug").onclick = function () {
+      if (cooldownTimer) clearInterval(cooldownTimer);
+      locked = false; orb.disabled = false; cdEl.textContent = "";
+      if (phase < PHASES.length - 1) { phase++; count = 0; countEl.textContent = "0"; renderPhases(); }
+      else { completeRitual(); }
+    };
+
+    // poster buttons
+    scr.querySelector("#mf-save").onclick = function () {
+      scr.querySelector("#mf-save").textContent = "Saving…";
+      setTimeout(function () { scr.querySelector("#mf-save").textContent = "Saved ✓"; }, 900);
+    };
+    scr.querySelector("#mf-share").onclick = function () {
+      var text = State.affirmation + " — Citrine 369";
+      if (navigator.share) { navigator.share({ text: text }).catch(function () {}); }
+      else if (navigator.clipboard) { navigator.clipboard.writeText(text); scr.querySelector("#mf-share").textContent = "Copied ✓"; }
+    };
+    scr.querySelector("#mf-home").onclick = function () {
+      scr.querySelector("#mf-modal").classList.remove("open");
+      resetAll();
+      showScreen("WELCOME");
+    };
+    scr.querySelector("[data-back]").onclick = function () { showScreen(State.area === "FOCUS" ? "CASH_FLOW" : State.area === "CALM" ? "STOCKS_CRYPTO" : State.area === "VITALITY" ? "REAL_ESTATE" : "FORBES_CLUB"); };
+
+    // reset phase state each entry
+    phase = 0; count = 0; locked = false;
+    countEl.textContent = "0";
+    renderPhases();
+  }
+
+  function resetAll() {
+    State.area = "FOCUS"; State.affirmation = ""; State.context = {};
+    // 重建仪式屏（清空上一次的 DOM 残留）
+    var fresh = buildManifestation();
+    stage.replaceChild(fresh, screens.MANIFESTATION);
+    screens.MANIFESTATION = fresh;
+  }
+
+  /* =========================================================
+     INIT
+     ========================================================= */
+  function init() {
+    Identity.init();
+
+    screens.WELCOME = buildWelcome();
+    screens.VAULT = buildVault();
+    screens.CASH_FLOW = buildFocusDial();
+    screens.STOCKS_CRYPTO = buildCalm();
+    screens.REAL_ESTATE = buildVitality();
+    screens.FORBES_CLUB = buildBond();
+    screens.ALCHEMIZING = buildAlchemizing();
+    screens.MANIFESTATION = buildManifestation();
+
+    Object.keys(screens).forEach(function (k) { stage.appendChild(screens[k]); });
+    showScreen("WELCOME");
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+
+})();
+</script>
+
+<script src="../assets/nav.js" defer></script>
+<script src="../assets/main.js" defer></script>
+</body>
+</html>
