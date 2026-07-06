@@ -6,10 +6,12 @@
 <title>Citrine 369 — Manifestation Ritual</title>
 <meta name="description" content="An interactive 3-6-9 manifestation ritual. For entertainment and self-reflection only.">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/styles.css">
 
-<!-- 注意：本工具为独立技术验证项目，保留原型金色神秘主义视觉，
-     不套用 Genki 官网 styles.css 的紫白设计 token（会互相冲突）。
-     它只是"借住"在 rituals/ 目录下，nav/footer 仍复用官网注入以保持站内一致。 -->
+<!-- 注意：本工具为独立技术验证项目，工具内部保留原型金色神秘主义视觉。
+     但页面外壳（白底 + nav + footer）必须复用官网 styles.css，
+     跟 breathe.html 完全一致：金色深色只锁在"手机壳内部"，
+     绝不铺到 body/main/html 上，否则会染黑整页并冲垮 nav/footer。 -->
 
 <style>
   /* ============================================================
@@ -36,17 +38,17 @@
     --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
 
-  /* 手机壳外层：宽屏时把整个应用装进一个居中的手机框；
-     窄屏(<=520px)时退化为全屏，手机框消失。 */
+  /* 手机壳外层：透明！白底由官网 styles.css 提供（跟 breathe 一致）。
+     绝不在这里设深色背景——那会染黑整页并盖掉 nav/footer。
+     定位逻辑照搬 breathe 的 .breathe-shell：撑满可用高度、居中。 */
   .ct-phoneframe-outer {
-    min-height: calc(100vh - 90px);
-    min-height: calc(100dvh - 90px);
+    height: calc(100vh - 90px);
+    height: calc(100dvh - 90px);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: clamp(0px, 3vh, 32px) clamp(0px, 4vw, 32px);
-    background:
-      radial-gradient(circle at 50% 0%, #14100a 0%, #050505 55%);
+    padding: clamp(16px, 4vh, 40px) clamp(16px, 4vw, 32px);
+    overflow: hidden;
   }
 
   .ct-phoneframe {
@@ -83,15 +85,13 @@
   }
 
   @media (max-width: 520px) {
-    .ct-phoneframe-outer { padding: 0; }
+    .ct-phoneframe-outer { padding: 10px 8px; }
     .ct-phoneframe {
       max-width: 100%;
-      height: calc(100dvh - 90px);
-      border-radius: 0;
-      border: none;
-      box-shadow: none;
+      height: 100%;
+      border-radius: 28px;
+      box-shadow: 0 0 0 6px #0a0a0a, 0 20px 50px rgba(0,0,0,0.5);
     }
-    .ct-phoneframe::before { display: none; }
   }
 
   /* ---------- screen stack ---------- */
