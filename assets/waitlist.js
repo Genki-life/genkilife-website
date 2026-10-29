@@ -14,6 +14,7 @@
 (function () {
   "use strict";
 
+  // update API
   var API = "https://api.genkilife.ai";
 
   /* ---------- helpers ---------- */
