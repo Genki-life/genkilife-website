@@ -14,7 +14,7 @@
 (function () {
   "use strict";
 
-  var API = "https://genki-waitlist-production.up.railway.app";
+  var API = "https://api.genkilife.ai";
 
   /* ---------- helpers ---------- */
   function fmt(n) { return Number(n).toLocaleString("en-US"); }
