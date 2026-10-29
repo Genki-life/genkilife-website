@@ -166,6 +166,23 @@
   .foot-col a { display: block; font-size: 14px; color: var(--ink-2); margin-bottom: 11px; }
   .foot-col a:hover { color: var(--ink); }
   .foot-legal { margin-top: 40px; font-size: 12.5px; color: var(--ink-3); }
+  .foot-legal p { margin: 0 0 6px; line-height: 1.5; }
+
+  .about-page { max-width: 760px; padding-top: 100px; padding-bottom: 120px; }
+  .about-page h1 { font-size: clamp(42px, 6vw, 68px); line-height: 1.08; letter-spacing: -0.04em; margin: 18px 0 28px; }
+  .about-intro { font-size: clamp(19px, 2.5vw, 24px); line-height: 1.55; color: var(--ink-2); max-width: 680px; }
+  .about-section { border-top: 1px solid var(--line); margin-top: 64px; padding-top: 32px; }
+  .about-section h2 { font-size: 24px; letter-spacing: -0.02em; margin-bottom: 24px; }
+  .about-details { display: grid; grid-template-columns: 150px 1fr; gap: 18px 24px; font-size: 15px; line-height: 1.65; }
+  .about-details dt { color: var(--ink-3); }
+  .about-details dd { margin: 0; color: var(--ink-2); }
+  .about-details a { color: inherit; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+  @media (max-width: 600px) {
+    .about-page { padding-top: 70px; padding-bottom: 80px; }
+    .about-section { margin-top: 48px; }
+    .about-details { grid-template-columns: 1fr; gap: 5px; }
+    .about-details dd { margin-bottom: 16px; }
+  }
 
   /* ============ MOTION (tech skin: organic, not mechanical) ============ */
   /* Nova rotating particle sphere — right-side hero visual */

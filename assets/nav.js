@@ -128,9 +128,9 @@
         '<div class="foot-cols">' +
           '<div class="foot-col"><h4>Product</h4><a href="' + ROOT + 'rituals.html">Rituals</a><a href="' + ROOT + 'index.html#five-layers">The five layers</a><a href="' + ROOT + 'index.html#waitlist">Join the waitlist</a></div>' +
           '<div class="foot-col"><h4>Legal</h4><a href="#">Privacy Policy</a><a href="#">Terms of Service</a></div>' +
-          '<div class="foot-col"><h4>Contact</h4><a href="mailto:hello@genkilife.ai">hello@genkilife.ai</a></div>' +
+          '<div class="foot-col"><h4>Company</h4><a href="' + ROOT + 'about.html">About Genki</a><a href="mailto:hello@genkilife.ai">hello@genkilife.ai</a></div>' +
         '</div></div>' +
-        '<div class="foot-legal">© 2026 Genki · genkilife.ai</div>' +
+        '<div class="foot-legal"><p>Genki is operated by Shenzhen Senji Guangchen Technology Co., Ltd.</p><p>Room 6D23, 6th Floor, No. 8 Wushitou Road, High-Tech Park North, Nanshan District, Shenzhen</p><p>© 2026 Genki · genkilife.ai</p></div>' +
       '</div></footer>'
     );
   }
