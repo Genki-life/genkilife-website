@@ -3,22 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Genki — A quiet Growth OS for becoming</title>
-<meta name="description" content="Genki is a gentle growth system that learns how you really are — and grows with you, at the speed of your own life. Not another tracker.">
+<title>Genki — Your personal agent for everyday growth</title>
+<meta name="description" content="Meet Nova, your personal agent for everyday wellbeing and growth. A little more you, every day.">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="assets/styles.css">
+<link rel="stylesheet" href="assets/styles.css?v=home-preview-2">
 
 <!-- Open Graph / social preview -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Genki">
-<meta property="og:title" content="Genki — A quiet Growth OS for becoming">
-<meta property="og:description" content="Not another tracker. No streaks to break. No goals to chase. Just you, becoming.">
+<meta property="og:title" content="Genki — Your personal agent for everyday growth">
+<meta property="og:description" content="Meet Nova, your personal agent for everyday wellbeing and growth.">
 <meta property="og:image" content="https://genkilife.ai/assets/og-default.png">
 <meta property="og:url" content="https://genkilife.ai/">
 <link rel="canonical" href="https://genkilife.ai/">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Genki — A quiet Growth OS for becoming">
-<meta name="twitter:description" content="Not another tracker. No streaks to break. No goals to chase. Just you, becoming.">
+<meta name="twitter:title" content="Genki — Your personal agent for everyday growth">
+<meta name="twitter:description" content="Meet Nova, your personal agent for everyday wellbeing and growth.">
 <meta name="twitter:image" content="https://genkilife.ai/assets/og-default.png">
 
 <!-- Vercel Web Analytics -->
@@ -35,21 +35,30 @@
 <!-- HERO -->
 <div class="wrap"><section class="hero" id="top">
   <div class="copy">
-    <div class="eyebrow"><span class="dot"></span> A quiet Growth OS for becoming</div>
-    <h1>Becoming,<br>gently.</h1>
-    <p class="sub">Genki is a gentle growth system that learns how you really are — and grows with you, at the speed of your own life.</p>
-    <p class="micro">Not another tracker. No streaks to break. No goals to chase.</p>
+    <div class="eyebrow"><span class="dot"></span> Your personal agent · Designed for 24/7</div>
+    <h1>A little more<br>you, every day.</h1>
+    <p class="sub">Meet Nova, your personal agent for a more balanced life.</p>
     <!-- waitlist signup → POSTs to Go backend on Railway (see assets/waitlist.js) -->
     <form class="signup" id="waitlist" data-waitlist novalidate>
       <input type="email" name="email" placeholder="you@email.com" autocomplete="email" required />
       <button class="btn-dark" type="submit">Join the waitlist</button>
     </form>
-    <p class="signup-note">Early access · iOS first · <a href="rituals.html" class="link-accent">What is Genki? →</a></p>
+    <p class="signup-note">Early access · iOS first</p>
   </div>
   <!-- Nova — a quiet light that notices you -->
   <div class="nova-stage">
     <canvas id="novaSphere" aria-hidden="true"></canvas>
-    <span class="nova-cap"><span class="nm">Nova</span><span class="st">It notices, so you don't have to.</span></span>
+    <div class="nova-demo" aria-label="A glimpse of Nova">
+      <div class="demo-label"><span class="demo-dot"></span> NOVA <span>PREVIEW</span></div>
+      <p class="demo-prompt">What do you need right now?</p>
+      <div class="demo-options" aria-label="Choose a scenario">
+        <button type="button" data-nova-choice="focus" aria-pressed="true">Focus</button>
+        <button type="button" data-nova-choice="unwind" aria-pressed="false">Unwind</button>
+        <button type="button" data-nova-choice="reflect" aria-pressed="false">Reflect</button>
+      </div>
+      <p class="demo-response" id="nova-response" aria-live="polite">“Let’s make space for one thing at a time.”</p>
+      <a class="demo-link" id="nova-link" href="rituals.html">Explore rituals →</a>
+    </div>
   </div>
 </section></div>
 
@@ -154,6 +163,7 @@
 <!-- scripts: nav first (injects header/footer), then page behavior -->
 <script src="assets/nav.js"></script>
 <script src="assets/nova.js"></script>
+<script src="assets/home-preview.js"></script>
 <script src="assets/main.js"></script>
 <script src="assets/waitlist.js"></script>
 </body>

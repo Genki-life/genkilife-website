@@ -191,6 +191,34 @@
   .nova-cap { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); text-align: center; }
   .nova-cap .nm { display: block; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-3); }
   .nova-cap .st { display: block; margin-top: 6px; font-size: 14px; color: var(--ink-2); letter-spacing: -0.005em; }
+
+  /* Home: Nova's interactive preview and a day of imagined moments. */
+  .hero { padding-bottom: 90px; }
+  .hero .eyebrow .dot { background: var(--accent); box-shadow: 0 0 0 4px #efedfb; }
+  .hero h1 { font-size: clamp(52px, 5.5vw, 72px); }
+  .hero .sub { margin-bottom: 36px; }
+  .hero .nova-stage { min-height: 610px; padding: 0 0 210px; }
+  .hero #novaSphere { height: 400px; }
+  .nova-demo { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: min(100%, 400px); padding: 20px 22px; background: rgba(255,255,255,.94); border: 1px solid #e9e8f0; border-radius: 20px; box-shadow: 0 18px 55px rgba(43,35,92,.08); }
+  .demo-label { display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 700; letter-spacing: .1em; color: var(--accent); }
+  .demo-label > span:last-child { margin-left: auto; color: #9996a6; font-size: 9px; letter-spacing: .07em; }
+  .demo-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .demo-prompt { font-size: 16px; font-weight: 700; margin: 16px 0 12px; }
+  .demo-options { display: flex; flex-wrap: wrap; gap: 7px; }
+  .demo-options button { font: inherit; font-size: 12px; padding: 7px 13px; border: 1px solid #e6e4ef; background: #fff; border-radius: 99px; color: var(--ink-2); cursor: pointer; }
+  .demo-options button[aria-pressed="true"] { background: #f0eefb; color: var(--accent); border-color: #dcd7f5; }
+  .demo-response { color: var(--ink-2); font-size: 14px; line-height: 1.5; margin-top: 14px; min-height: 21px; }
+  .demo-link { display: inline-block; color: var(--accent); font-size: 12px; font-weight: 700; margin-top: 10px; }
+  .demo-options button:focus-visible, .demo-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  @media (max-width: 900px) {
+    .hero .nova-stage { margin-top: 18px; min-height: 590px; }
+  }
+  @media (max-width: 600px) {
+    .hero h1 { font-size: clamp(43px, 11vw, 56px); }
+    .hero .nova-stage { min-height: 535px; padding-bottom: 210px; }
+    .hero #novaSphere { height: 325px; }
+
+  }
   /* scroll reveal */
   .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.9s cubic-bezier(.22,.61,.36,1), transform 0.9s cubic-bezier(.22,.61,.36,1); }
   .reveal.in { opacity: 1; transform: none; }
