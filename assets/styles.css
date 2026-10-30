@@ -209,6 +209,37 @@
   .demo-options button[aria-pressed="true"] { background: #f0eefb; color: var(--accent); border-color: #dcd7f5; }
   .demo-response { color: var(--ink-2); font-size: 14px; line-height: 1.5; margin-top: 14px; min-height: 21px; }
   .demo-link { display: inline-block; color: var(--accent); font-size: 12px; font-weight: 700; margin-top: 10px; }
+  .product-demo { padding: 100px 0 110px; }
+  .product-demo-eyebrow { color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+  .product-demo-intro { text-align: center; margin-bottom: 55px; }
+  .product-demo-intro h2 { font-size: clamp(36px, 4.5vw, 52px); line-height: 1.1; letter-spacing: -.04em; margin: 18px 0 14px; }
+  .product-demo-intro p { color: var(--ink-2); font-size: 16px; line-height: 1.6; }
+  .product-demo-layout { display: grid; grid-template-columns: 1fr minmax(280px, 400px) 1fr; gap: 24px; align-items: center; }
+  .product-demo-side { max-width: 225px; }
+  .product-demo-side-left { justify-self: end; text-align: right; }
+  .product-demo-side-right { justify-self: start; text-align: left; }
+  .product-demo-side-label { color: var(--accent); font-size: 11px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; margin-bottom: 18px; }
+  .product-demo-side h3 { font-size: clamp(22px, 2.5vw, 30px); line-height: 1.15; letter-spacing: -.03em; margin-bottom: 12px; }
+  .product-demo-side p { color: var(--ink-3); font-size: 14px; line-height: 1.6; }
+  .product-demo-view { text-align: center; }
+  .product-demo-phone { width: min(240px, 75%); margin: 0 auto; border: 6px solid #212321; border-radius: 32px; overflow: hidden; background: #f8f7f3; box-shadow: 0 18px 38px rgba(20,20,20,.13); }
+  .product-demo-track { display: flex; width: 100%; transition: transform .45s ease; }
+  .product-demo-track img { display: block; flex: 0 0 100%; min-width: 0; width: 100%; height: auto; aspect-ratio: 780 / 1688; object-fit: contain; }
+  .product-demo-controls { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 22px auto 0; max-width: 460px; }
+  .product-demo-controls button { font: inherit; font-size: 13px; padding: 10px 15px; border: 1px solid #e2e2e2; border-radius: 100px; background: #fff; color: var(--ink-2); cursor: pointer; }
+  .product-demo-controls button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .product-demo-controls button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .product-demo-caption { margin-top: 14px; font-size: 12px; color: var(--ink-3); }
+  @media (prefers-reduced-motion: reduce) { .product-demo-track { transition: none; } }
+  @media (max-width: 700px) {
+    .product-demo { padding: 72px 0 90px; }
+    .product-demo-intro { margin-bottom: 36px; }
+    .product-demo-layout { grid-template-columns: 1fr 1fr; gap: 32px 20px; }
+    .product-demo-view { grid-column: 1 / -1; grid-row: 1; }
+    .product-demo-side-left { justify-self: start; text-align: left; }
+    .product-demo-side-label { margin-bottom: 10px; }
+    .product-demo-side h3 { font-size: 21px; }
+  }
   .demo-options button:focus-visible, .demo-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   @media (max-width: 900px) {
     .hero .nova-stage { margin-top: 18px; min-height: 590px; }
@@ -278,7 +309,9 @@
 
     /* signup stacks vertically */
     .signup { flex-direction: column; max-width: 100%; }
-    .signup input { width: 100%; }
+    .signup input { width: 100%; font-size: 16px; }
+    .demo-options button, .product-demo-controls button { min-height: 44px; }
+    .nav-toggle { min-width: 44px; min-height: 44px; }
     .btn-dark { width: 100%; padding: 15px; }
 
     /* nova sphere shrinks on phone */

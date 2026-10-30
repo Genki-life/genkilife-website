@@ -124,7 +124,7 @@
     return (
       '<footer><div class="wrap"><div class="foot-inner">' +
         '<div class="foot-brand"><a class="brand" href="' + ROOT + 'index.html" style="text-decoration:none;color:inherit;">' + MARK + " Genki</a>" +
-        '<p>A quiet Growth OS for becoming. General wellness, not medical advice.</p></div>' +
+        '<p>A quiet Growth OS for becoming. Your personal AI agent for a healthier rhythm. General wellness, not medical advice.</p></div>' +
         '<div class="foot-cols">' +
           '<div class="foot-col"><h4>Product</h4><a href="' + ROOT + 'rituals.html">Rituals</a><a href="' + ROOT + 'index.html#five-layers">The five layers</a><a href="' + ROOT + 'index.html#waitlist">Join the waitlist</a></div>' +
           '<div class="foot-col"><h4>Legal</h4><a href="#">Privacy Policy</a><a href="#">Terms of Service</a></div>' +
