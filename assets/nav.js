@@ -24,17 +24,17 @@
            Tools without their own page yet just link back to rituals.html.
      Keep every tool NON-MEDICAL (general wellness only). ---- */
   var RITUALS = [
-    { dim: "Body",  zh: "身体", tools: [
+    { dim: "Body", tools: [
         { n: "Breathe", s: "Live", href: "rituals/breathe.html" },
         { n: "Stretch", s: "Soon", href: "rituals.html" },
         { n: "Wind-down", s: "Soon", href: "rituals.html" } ] },
-    { dim: "Mind",  zh: "心智", tools: [
+    { dim: "Mind", tools: [
         { n: "Focus", s: "Soon", href: "rituals.html" }, { n: "Reflect", s: "Soon", href: "rituals.html" } ] },
-    { dim: "Mood",  zh: "情绪", tools: [
+    { dim: "Mood", tools: [
         { n: "Ground", s: "Soon", href: "rituals.html" }, { n: "Mood note", s: "Soon", href: "rituals.html" } ] },
-    { dim: "Bond",  zh: "联结", warm: true, tools: [
+    { dim: "Bond", warm: true, tools: [
         { n: "Gratitude note", s: "Soon", href: "rituals.html" }, { n: "Check on someone", s: "Soon", href: "rituals.html" } ] },
-    { dim: "Craft", zh: "创造", tools: [
+    { dim: "Craft", tools: [
         { n: "Free write", s: "Soon", href: "rituals.html" }, { n: "Make something small", s: "Soon", href: "rituals.html" } ] }
   ];
 
@@ -50,7 +50,7 @@
         return '<a class="titem" href="' + ROOT + t.href + '">' + t.n + " " + tagHtml(t.s) + "</a>";
       }).join("");
       return '<div class="mega-col' + (d.warm ? " warm" : "") + '">' +
-             '<div class="ch"><b>' + d.dim + "</b> " + d.zh + "</div>" + items + "</div>";
+             '<div class="ch"><b>' + d.dim + "</b></div>" + items + "</div>";
     }).join("");
     return (
       '<div class="mega" id="ritualsMega" role="menu" aria-label="Rituals">' +
@@ -69,7 +69,7 @@
       var tools = d.tools.map(function (t) {
         return '<a class="mm-tool" href="' + ROOT + t.href + '">' + t.n + " " + tagHtml(t.s) + "</a>";
       }).join("");
-      return '<div class="mm-dim"><div class="mm-dim-name">' + d.dim + " · " + d.zh + "</div>" + tools + "</div>";
+      return '<div class="mm-dim"><div class="mm-dim-name">' + d.dim + "</div>" + tools + "</div>";
     }).join("");
     return (
       '<div class="mobile-menu"><div class="mm-inner">' +
