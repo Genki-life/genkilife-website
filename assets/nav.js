@@ -196,6 +196,13 @@
       toggle.setAttribute("aria-expanded", open ? "true" : "false");
     });
   }
+  var mobileWaitlist = header.querySelector(".mm-cta");
+  if (mobileWaitlist && toggle) {
+    mobileWaitlist.addEventListener("click", function () {
+      header.classList.remove("menu-open");
+      toggle.setAttribute("aria-expanded", "false");
+    });
+  }
   /* mobile Rituals accordion */
   var mmAcc = document.getElementById("mmRituals");
   if (mmAcc) {
